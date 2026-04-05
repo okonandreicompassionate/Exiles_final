@@ -4,6 +4,9 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useCart } from "../components/cartProvider";
 import { supabase } from "../../lib/supabase";
+import { ShoppingCart } from "lucide-react";
+
+
 
 type Variant = {
   id: string;
@@ -120,12 +123,15 @@ export default function LandingPage() {
           <h1 className="font-bold tracking-[0.3em] text-sm justify-self-center">
             EXILES
           </h1>
-          <div className="flex items-center gap-4 text-sm justify-end">
-            <Link href="/cart" className="text-zinc-300 hover:text-white transition">
-              Cart
-              
-            </Link>
-          </div>
+         <div className="flex items-center gap-4 text-sm justify-end">
+  <Link
+    href="/cart"
+    className="flex items-center gap-2 text-zinc-300 hover:text-white transition"
+  >
+    <ShoppingCart size={18} />
+    Cart
+  </Link>
+</div>
         </div>
       </nav>
 

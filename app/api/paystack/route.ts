@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
-  const { email, amount } = await req.json();
+  const { email, amount, metadata } = await req.json();
 
   const response = await fetch("https://api.paystack.co/transaction/initialize", {
     method: "POST",
@@ -13,7 +13,8 @@ export async function POST(req: Request) {
       email,
       amount,
       currency: "NGN",
-      callback_url: "http://localhost:3000/success",
+      metadata,
+      callback_url: `${process.env.NEXT_PUBLIC_SITE_URL}/success`,
     }),
   });
 
