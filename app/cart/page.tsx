@@ -144,7 +144,7 @@ export default function CartPage() {
             <ArrowLeft size={14} strokeWidth={1.5} />
             Back
           </button>
-          <Link href="/" className="font-bold tracking-[0.5em] text-sm uppercase">
+          <Link href="/shop" className="font-bold tracking-[0.5em] text-sm uppercase">
             EXILES
           </Link>
           <span className="text-zinc-600 text-xs tracking-widest uppercase">
