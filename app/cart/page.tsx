@@ -428,7 +428,7 @@ export default function CartPage() {
               </p>
 
               <Link
-                href="/"
+                href="/shop"
                 className="block text-center text-[10px] tracking-[0.2em] uppercase text-zinc-600 hover:text-white transition-colors"
               >
                 ← Continue Shopping

@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useCart } from "../components/cartProvider";
 import { supabase } from "../../lib/supabase";
 import { ShoppingCart, ChevronDown } from "lucide-react";
+import { FiGrid, FiStar, FiBox, FiLayers, FiShoppingBag } from "react-icons/fi";
+import { GiHoodie, GiTrousers } from "react-icons/gi";
 
 type Variant = {
   id: string;
@@ -27,16 +29,17 @@ type Product = {
   variants: Variant[];
 };
 
-const CATEGORIES = [
-  { name: "ALL", label: "All", emoji: "🖤" },
-  { name: "NEW", label: "New Arrivals", emoji: "✦" },
-  { name: "Hoodies", label: "Hoodies", emoji: "🧥" },
-  { name: "Jackets", label: "Jackets", emoji: "🪡" },
-  { name: "Tees", label: "T-Shirts", emoji: "👕" },
-  { name: "Trousers", label: "Trousers", emoji: "👖" },
-  { name: "Accessories", label: "Accessories", emoji: "🧣" },
-];
 
+
+export const CATEGORIES = [
+  { name: "ALL", label: "All", icon: FiGrid },
+  { name: "NEW", label: "New Arrivals", icon: FiStar },
+  { name: "Hoodies", label: "Hoodies", icon: GiHoodie },
+  { name: "Jackets", label: "Jackets", icon: FiLayers },
+  { name: "Tees", label: "T-Shirts", icon: FiShoppingBag },
+  { name: "Trousers", label: "Trousers", icon: GiTrousers },
+  { name: "Accessories", label: "Accessories", icon: FiBox },
+];
 export default function LandingPage() {
   const [activeFilter, setActiveFilter] = useState("ALL");
   const [addedId, setAddedId] = useState<string | null>(null);
@@ -116,7 +119,7 @@ export default function LandingPage() {
 
           {/* LOGO */}
           <h1 className="font-bold tracking-[0.5em] text-sm uppercase flex-1 text-center">
-            EXILES
+            EX1LES
           </h1>
 
           {/* RIGHT NAV */}
@@ -136,7 +139,7 @@ export default function LandingPage() {
       {/* HERO */}
       <div className="relative w-full h-screen overflow-hidden">
         <img
-          src="https://images.unsplash.com/photo-1618354691438-25bc04584c23"
+          src="https://i.imgur.com/8VAugsc.jpeg"
           alt="Hero"
           className="w-full h-full object-cover object-top"
         />
@@ -149,7 +152,7 @@ export default function LandingPage() {
             Limited Edition Styles
           </p>
           <h2 className="text-5xl sm:text-7xl font-light leading-none tracking-tight text-white">
-            Exile<br />
+            EX1LES<br />
             <span className="font-semibold">Culture</span>
           </h2>
           <p className="text-[10px] tracking-[0.4em] uppercase text-zinc-400 mt-5">
@@ -173,30 +176,64 @@ export default function LandingPage() {
         </div>
       </div>
 
-      {/* SHOP BY CATEGORY */}
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-8 pt-16 pb-8">
-        <p className="text-[10px] tracking-[0.4em] uppercase text-zinc-500 mb-6">
-          Shop by Category
-        </p>
-        <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
-          {CATEGORIES.map((cat) => (
-            <button
-              key={cat.name}
-              onClick={() => setActiveFilter(cat.name)}
-              className={`flex flex-col items-center gap-2.5 p-3 sm:p-4 rounded-2xl border transition-all duration-300 ${
-                activeFilter === cat.name
-                  ? "border-zinc-600 bg-zinc-800 text-white shadow-lg shadow-black/20"
-                  : "border-zinc-800/60 bg-zinc-900/60 text-zinc-500 hover:border-zinc-700 hover:text-zinc-300 hover:bg-zinc-800/60"
-              }`}
-            >
-              <span className="text-xl sm:text-2xl">{cat.emoji}</span>
-              <span className="text-[9px] sm:text-[10px] tracking-[0.1em] uppercase text-center leading-tight">
-                {cat.label}
-              </span>
-            </button>
-          ))}
-        </div>
-      </div>
+{/* SHOP BY CATEGORY */}
+<div className="max-w-[1400px] mx-auto px-4 sm:px-8 pt-16 pb-8">
+  <p className="text-[10px] tracking-[0.4em] uppercase text-zinc-500 mb-6">
+    Shop by Category
+  </p>
+
+  <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
+    {CATEGORIES.map((cat) => {
+      const Icon = cat.icon;
+      const isActive = activeFilter === cat.name;
+
+      return (
+        <button
+          key={cat.name}
+          onClick={() => setActiveFilter(cat.name)}
+          className={`group relative flex flex-col items-center gap-2.5 p-3 sm:p-4 rounded-2xl border transition-all duration-300 overflow-hidden
+          
+          ${
+            isActive
+              ? "border-yellow-500/60 bg-zinc-800 text-white shadow-[0_0_20px_rgba(234,179,8,0.15)] scale-[1.04]"
+              : "border-zinc-800/60 bg-zinc-900/60 text-zinc-500 hover:border-zinc-700 hover:text-white hover:bg-zinc-800/60 hover:scale-[1.03]"
+          }`}
+        >
+          {/* ICON */}
+          <Icon
+            className={`text-xl sm:text-2xl transition-all duration-300
+            ${
+              isActive
+                ? "text-yellow-400 scale-110"
+                : "text-zinc-400 group-hover:text-white group-hover:scale-110"
+            }`}
+          />
+
+          {/* LABEL */}
+          <span
+            className={`text-[9px] sm:text-[10px] tracking-[0.12em] uppercase text-center leading-tight transition
+            ${
+              isActive
+                ? "text-white"
+                : "text-zinc-500 group-hover:text-zinc-300"
+            }`}
+          >
+            {cat.label}
+          </span>
+
+          {/* HOVER GLOW */}
+          <span className="absolute inset-0 opacity-0 group-hover:opacity-100 bg-white/5 transition duration-300 blur-xl" />
+
+          {/* ACTIVE TOP BAR */}
+          <span
+            className={`absolute top-0 left-0 h-[2px] bg-yellow-400 transition-all duration-300
+            ${isActive ? "w-full" : "w-0 group-hover:w-full opacity-40"}`}
+          />
+        </button>
+      );
+    })}
+  </div>
+</div>
 
       {/* DIVIDER */}
       <div className="max-w-[1400px] mx-auto px-4 sm:px-8 py-4">
