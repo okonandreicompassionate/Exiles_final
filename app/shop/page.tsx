@@ -102,27 +102,27 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="bg-black min-h-screen text-white">
+    <div className="bg-zinc-950 min-h-screen text-white">
 
       {/* NAV */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-black/60 backdrop-blur-xl border-b border-white/10">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-8 py-4 flex justify-between items-center">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-zinc-950/80 backdrop-blur-xl border-b border-zinc-800/60">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-8 py-4 flex items-center">
           {/* LEFT NAV */}
-          <div className="hidden md:flex gap-8 text-xs tracking-[0.2em] uppercase">
-            <button onClick={() => setActiveFilter("NEW")} className={`transition ${activeFilter === "NEW" ? "text-white" : "text-zinc-500 hover:text-white"}`}>New</button>
-            <button onClick={() => setActiveFilter("Hoodies")} className={`transition ${activeFilter === "Hoodies" ? "text-white" : "text-zinc-500 hover:text-white"}`}>Hoodies</button>
-            <button onClick={() => setActiveFilter("Jackets")} className={`transition ${activeFilter === "Jackets" ? "text-white" : "text-zinc-500 hover:text-white"}`}>Jackets</button>
+          <div className="hidden md:flex gap-8 text-xs tracking-[0.2em] uppercase flex-1">
+            <button onClick={() => setActiveFilter("NEW")} className={`transition-colors ${activeFilter === "NEW" ? "text-white" : "text-zinc-500 hover:text-zinc-200"}`}>New</button>
+            <button onClick={() => setActiveFilter("Hoodies")} className={`transition-colors ${activeFilter === "Hoodies" ? "text-white" : "text-zinc-500 hover:text-zinc-200"}`}>Hoodies</button>
+            <button onClick={() => setActiveFilter("Jackets")} className={`transition-colors ${activeFilter === "Jackets" ? "text-white" : "text-zinc-500 hover:text-zinc-200"}`}>Jackets</button>
           </div>
 
           {/* LOGO */}
-          <h1 className="font-bold tracking-[0.5em] text-sm uppercase absolute left-1/2 -translate-x-1/2">
+          <h1 className="font-bold tracking-[0.5em] text-sm uppercase flex-1 text-center">
             EXILES
           </h1>
 
           {/* RIGHT NAV */}
-          <div className="flex items-center gap-6 ml-auto">
-            <Link href="/cart" className="relative flex items-center gap-2 text-zinc-400 hover:text-white transition">
-              <ShoppingCart size={18} />
+          <div className="flex items-center justify-end flex-1">
+            <Link href="/cart" className="relative flex items-center gap-2 text-zinc-400 hover:text-white transition-colors">
+              <ShoppingCart size={18} strokeWidth={1.5} />
               {cartItems.length > 0 && (
                 <span className="absolute -top-2 -right-2 w-4 h-4 bg-white text-black text-[10px] rounded-full flex items-center justify-center font-bold">
                   {cartItems.length}
@@ -138,57 +138,59 @@ export default function LandingPage() {
         <img
           src="https://images.unsplash.com/photo-1618354691438-25bc04584c23"
           alt="Hero"
-          className="w-full h-full object-cover object-top scale-105"
+          className="w-full h-full object-cover object-top"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black" />
+        <div className="absolute inset-0 bg-gradient-to-b from-zinc-950/50 via-transparent to-zinc-950" />
+        <div className="absolute inset-0 bg-gradient-to-r from-zinc-950/30 to-transparent" />
 
         {/* HERO TEXT */}
         <div className="absolute bottom-32 left-8 sm:left-16">
-          <p className="text-xs tracking-[0.4em] uppercase text-zinc-400 mb-3">
+          <p className="text-[10px] tracking-[0.5em] uppercase text-zinc-400 mb-4">
             Limited Edition Styles
           </p>
-          <h2 className="text-5xl sm:text-7xl font-semibold leading-none tracking-tight">
-            Exile<br />Culture
+          <h2 className="text-5xl sm:text-7xl font-light leading-none tracking-tight text-white">
+            Exile<br />
+            <span className="font-semibold">Culture</span>
           </h2>
-          <p className="text-xs tracking-[0.3em] uppercase text-zinc-400 mt-4">
+          <p className="text-[10px] tracking-[0.4em] uppercase text-zinc-400 mt-5">
             Designed to Stand Out
           </p>
         </div>
 
         {/* SCROLL INDICATOR */}
         <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2">
-          <p className="text-[10px] tracking-[0.3em] uppercase text-zinc-500">Scroll</p>
-          <div className="w-8 h-8 rounded-full border border-white/30 flex items-center justify-center animate-bounce">
-            <ChevronDown size={14} className="text-white" />
+          <p className="text-[9px] tracking-[0.4em] uppercase text-zinc-600">Scroll</p>
+          <div className="w-7 h-7 rounded-full border border-zinc-700 flex items-center justify-center animate-bounce">
+            <ChevronDown size={12} className="text-zinc-400" />
           </div>
         </div>
 
         {/* HERO DOTS */}
-        <div className="absolute bottom-10 left-8 sm:left-16 flex gap-2">
-          <div className="w-6 h-1 bg-white rounded-full" />
-          <div className="w-2 h-1 bg-white/30 rounded-full" />
-          <div className="w-2 h-1 bg-white/30 rounded-full" />
+        <div className="absolute bottom-12 left-8 sm:left-16 flex gap-1.5 items-center">
+          <div className="w-5 h-0.5 bg-white rounded-full" />
+          <div className="w-1.5 h-0.5 bg-zinc-600 rounded-full" />
+          <div className="w-1.5 h-0.5 bg-zinc-600 rounded-full" />
         </div>
       </div>
 
       {/* SHOP BY CATEGORY */}
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-8 py-16">
-        <h2 className="text-sm tracking-[0.3em] uppercase text-zinc-400 mb-8">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-8 pt-16 pb-8">
+        <p className="text-[10px] tracking-[0.4em] uppercase text-zinc-500 mb-6">
           Shop by Category
-        </h2>
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-7 gap-3">
+        </p>
+        <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
           {CATEGORIES.map((cat) => (
             <button
               key={cat.name}
               onClick={() => setActiveFilter(cat.name)}
-              className={`flex flex-col items-center gap-3 p-4 rounded-xl border transition-all duration-300 ${
+              className={`flex flex-col items-center gap-2.5 p-3 sm:p-4 rounded-2xl border transition-all duration-300 ${
                 activeFilter === cat.name
-                  ? "border-white bg-white/10 text-white"
-                  : "border-white/10 bg-zinc-900 text-zinc-400 hover:border-white/30 hover:text-white"
+                  ? "border-zinc-600 bg-zinc-800 text-white shadow-lg shadow-black/20"
+                  : "border-zinc-800/60 bg-zinc-900/60 text-zinc-500 hover:border-zinc-700 hover:text-zinc-300 hover:bg-zinc-800/60"
               }`}
             >
-              <span className="text-2xl">{cat.emoji}</span>
-              <span className="text-[10px] tracking-[0.15em] uppercase text-center leading-tight">
+              <span className="text-xl sm:text-2xl">{cat.emoji}</span>
+              <span className="text-[9px] sm:text-[10px] tracking-[0.1em] uppercase text-center leading-tight">
                 {cat.label}
               </span>
             </button>
@@ -197,49 +199,50 @@ export default function LandingPage() {
       </div>
 
       {/* DIVIDER */}
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-8">
-        <div className="border-t border-white/10" />
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-8 py-4">
+        <div className="border-t border-zinc-800/60" />
       </div>
 
       {/* PRODUCTS SECTION */}
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-8 py-12">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-8 py-8 pb-20">
 
         {/* SECTION HEADER */}
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h2 className="text-sm tracking-[0.3em] uppercase text-white">
+            <h2 className="text-xs tracking-[0.3em] uppercase text-zinc-300">
               {activeFilter === "ALL" ? "All Products" : activeFilter === "NEW" ? "New Arrivals" : activeFilter}
             </h2>
-            <p className="text-xs text-zinc-600 mt-1">
+            <p className="text-[10px] text-zinc-600 mt-1 tracking-wider">
               {filteredProducts.length} {filteredProducts.length === 1 ? "item" : "items"}
             </p>
           </div>
 
-          {/* FILTER DROPDOWN */}
+          {/* FILTER */}
           <div className="relative">
             <select
               value={activeFilter}
               onChange={(e) => setActiveFilter(e.target.value)}
-              className="appearance-none bg-zinc-900 border border-white/10 text-white text-xs tracking-widest uppercase px-4 py-2 pr-8 outline-none cursor-pointer rounded-lg"
+              className="appearance-none bg-zinc-900 border border-zinc-800 text-zinc-300 text-[10px] tracking-widest uppercase px-4 py-2 pr-8 outline-none cursor-pointer rounded-xl transition-colors hover:border-zinc-700"
             >
               <option value="ALL">All</option>
               <option value="NEW">New</option>
               <option value="Hoodies">Hoodies</option>
               <option value="Jackets">Jackets</option>
             </select>
-            <ChevronDown size={12} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
+            <ChevronDown size={11} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
           </div>
         </div>
 
         {/* SKELETON */}
         {loading && (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
             {[...Array(8)].map((_, i) => (
-              <div key={i} className="bg-zinc-900 rounded-xl border border-zinc-800 animate-pulse">
-                <div className="aspect-[3/4] rounded-t-xl bg-zinc-800" />
-                <div className="p-4 space-y-2">
-                  <div className="h-3 bg-zinc-800 rounded w-3/4" />
-                  <div className="h-3 bg-zinc-800 rounded w-1/4" />
+              <div key={i} className="bg-zinc-900/80 rounded-2xl overflow-hidden animate-pulse">
+                <div className="aspect-[3/4] bg-zinc-800" />
+                <div className="p-4 space-y-2.5">
+                  <div className="h-2.5 bg-zinc-800 rounded-full w-3/4" />
+                  <div className="h-2.5 bg-zinc-800 rounded-full w-1/3" />
+                  <div className="h-8 bg-zinc-800 rounded-xl mt-3" />
                 </div>
               </div>
             ))}
@@ -248,11 +251,11 @@ export default function LandingPage() {
 
         {/* PRODUCT GRID */}
         {!loading && (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
             {filteredProducts.map((product) => (
               <div
                 key={product.id}
-                className="group bg-zinc-900 rounded-xl border border-transparent hover:border-zinc-700 transition-all duration-300 overflow-hidden flex flex-col"
+                className="group bg-zinc-900/80 rounded-2xl overflow-hidden border border-zinc-800/40 hover:border-zinc-700/60 transition-all duration-500 hover:shadow-xl hover:shadow-black/30 flex flex-col"
               >
                 {/* IMAGE */}
                 <div className="aspect-[3/4] overflow-hidden bg-zinc-800 relative">
@@ -261,47 +264,58 @@ export default function LandingPage() {
                     alt={product.name}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
                   />
+                  {/* GRADIENT OVERLAY */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-zinc-900/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+                  {/* NEW BADGE */}
                   {product.is_featured && (
-                    <span className="absolute top-3 left-3 text-[10px] uppercase tracking-widest text-white bg-black/70 backdrop-blur-sm px-2 py-1 rounded-full border border-white/20">
+                    <span className="absolute top-3 left-3 text-[9px] uppercase tracking-widest text-white bg-zinc-900/80 backdrop-blur-md px-2.5 py-1 rounded-full border border-zinc-700/50">
                       New
                     </span>
                   )}
                 </div>
 
                 {/* INFO */}
-                <div className="p-4 flex flex-col flex-grow gap-3">
+                <div className="p-3 sm:p-4 flex flex-col flex-grow gap-2.5">
                   <div>
-                    <p className="text-sm text-white font-medium truncate">
+                    <p className="text-xs sm:text-sm text-zinc-100 font-medium truncate leading-snug">
                       {product.name}
                     </p>
-                    <p className="text-xs text-zinc-500 mt-0.5">
+                    <p className="text-[10px] text-zinc-600 mt-0.5 tracking-wide">
                       {product.categories?.[0]?.name ?? "EXILES"}
                     </p>
                   </div>
 
-                  <p className="font-semibold text-sm text-white">
+                  <p className="text-sm font-semibold text-white">
                     ₦{(product.price / 100).toLocaleString()}
                   </p>
 
+                  {/* SIZE PILLS */}
+                  <div className="flex gap-1 flex-wrap">
+                    {product.variants.slice(0, 4).map((v) => (
+                      <span key={v.id} className={`text-[9px] px-1.5 py-0.5 rounded-md border tracking-wide ${v.stock === 0 ? "border-zinc-800 text-zinc-700" : "border-zinc-700 text-zinc-400"}`}>
+                        {v.size}
+                      </span>
+                    ))}
+                  </div>
+
                   {/* BUTTONS */}
-                  <div className="flex flex-col gap-2 mt-auto">
+                  <div className="flex gap-2 mt-auto pt-1">
                     <Link
                       href={`/product/${product.id}`}
-                      className="w-full py-2 text-[10px] tracking-widest uppercase text-center border border-white/20 text-zinc-300 hover:border-white hover:text-white transition-colors rounded-lg"
+                      className="flex-1 py-2 text-[10px] tracking-widest uppercase text-center border border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-zinc-200 transition-all duration-300 rounded-xl"
                     >
-                      View Details
+                      Details
                     </Link>
                     <button
                       onClick={(e) => handleQuickAdd(e, product)}
-                      className={`w-full py-2 text-[10px] tracking-widest uppercase font-semibold rounded-lg transition-all duration-300 ${
+                      className={`flex-1 py-2 text-[10px] tracking-widest uppercase font-semibold rounded-xl transition-all duration-300 ${
                         addedId === product.id
-                          ? "bg-white text-black"
-                          : "bg-white/10 text-white hover:bg-white hover:text-black"
+                          ? "bg-white text-zinc-950"
+                          : "bg-zinc-800 text-zinc-200 hover:bg-zinc-700"
                       }`}
                     >
-                      {addedId === product.id
-                        ? "Added ✓"
-                        : `Add — ${product.variants[0]?.size ?? "N/A"}`}
+                      {addedId === product.id ? "Added ✓" : "Add"}
                     </button>
                   </div>
                 </div>
@@ -313,12 +327,12 @@ export default function LandingPage() {
         {/* EMPTY STATE */}
         {!loading && filteredProducts.length === 0 && (
           <div className="flex flex-col items-center justify-center h-64 gap-4">
-            <p className="text-zinc-600 text-xs tracking-widest uppercase">
+            <p className="text-zinc-700 text-[10px] tracking-[0.3em] uppercase">
               No products in this category yet
             </p>
             <button
               onClick={() => setActiveFilter("ALL")}
-              className="text-xs tracking-widest uppercase text-white border border-white/20 px-6 py-2 hover:bg-white hover:text-black transition-colors"
+              className="text-[10px] tracking-widest uppercase text-zinc-400 border border-zinc-800 px-6 py-2.5 rounded-xl hover:border-zinc-600 hover:text-white transition-all"
             >
               View All
             </button>
@@ -327,51 +341,51 @@ export default function LandingPage() {
       </div>
 
       {/* FOOTER */}
-      <footer className="bg-zinc-950 text-white mt-auto border-t border-zinc-800">
+      <footer className="bg-zinc-900/50 text-white border-t border-zinc-800/60">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-8 py-12 sm:py-16">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             <div className="col-span-2 md:col-span-1">
               <h2 className="font-bold tracking-[0.5em] text-sm mb-4">EXILES</h2>
-              <p className="text-sm text-zinc-500">
+              <p className="text-xs text-zinc-600 leading-relaxed">
                 Clean silhouettes. Premium everyday wear built for presence.
               </p>
             </div>
             <div>
-              <p className="text-xs tracking-[0.2em] uppercase font-medium mb-4">Shop</p>
-              <ul className="space-y-2 text-sm text-zinc-500">
-                <li onClick={() => setActiveFilter("NEW")} className="hover:text-white cursor-pointer transition">New Arrivals</li>
-                <li onClick={() => setActiveFilter("Hoodies")} className="hover:text-white cursor-pointer transition">Hoodies</li>
-                <li onClick={() => setActiveFilter("Jackets")} className="hover:text-white cursor-pointer transition">Jackets</li>
+              <p className="text-[10px] tracking-[0.3em] uppercase text-zinc-500 mb-4">Shop</p>
+              <ul className="space-y-2.5 text-xs text-zinc-600">
+                <li onClick={() => setActiveFilter("NEW")} className="hover:text-zinc-300 cursor-pointer transition-colors">New Arrivals</li>
+                <li onClick={() => setActiveFilter("Hoodies")} className="hover:text-zinc-300 cursor-pointer transition-colors">Hoodies</li>
+                <li onClick={() => setActiveFilter("Jackets")} className="hover:text-zinc-300 cursor-pointer transition-colors">Jackets</li>
               </ul>
             </div>
             <div>
-              <p className="text-xs tracking-[0.2em] uppercase font-medium mb-4">Support</p>
-              <ul className="space-y-2 text-sm text-zinc-500">
-                <li className="hover:text-white cursor-pointer transition">Contact</li>
-                <li className="hover:text-white cursor-pointer transition">Shipping</li>
-                <li className="hover:text-white cursor-pointer transition">Returns</li>
+              <p className="text-[10px] tracking-[0.3em] uppercase text-zinc-500 mb-4">Support</p>
+              <ul className="space-y-2.5 text-xs text-zinc-600">
+                <li className="hover:text-zinc-300 cursor-pointer transition-colors">Contact</li>
+                <li className="hover:text-zinc-300 cursor-pointer transition-colors">Shipping</li>
+                <li className="hover:text-zinc-300 cursor-pointer transition-colors">Returns</li>
               </ul>
             </div>
             <div className="col-span-2 md:col-span-1">
-              <p className="text-xs tracking-[0.2em] uppercase font-medium mb-4">Stay Updated</p>
-              <p className="text-sm text-zinc-500 mb-4">Get early access to drops.</p>
-              <div className="flex border border-zinc-700 rounded-lg overflow-hidden">
+              <p className="text-[10px] tracking-[0.3em] uppercase text-zinc-500 mb-4">Stay Updated</p>
+              <p className="text-xs text-zinc-600 mb-4 leading-relaxed">Get early access to drops.</p>
+              <div className="flex border border-zinc-800 rounded-xl overflow-hidden bg-zinc-900/60">
                 <input
                   type="email"
                   placeholder="Email address"
-                  className="flex-1 px-4 py-2.5 outline-none text-sm bg-transparent text-white placeholder-zinc-600"
+                  className="flex-1 px-4 py-2.5 outline-none text-xs bg-transparent text-white placeholder-zinc-700"
                 />
-                <button className="bg-white text-black px-5 text-xs uppercase tracking-widest font-medium hover:bg-zinc-200 transition">
+                <button className="bg-zinc-700 text-white px-4 text-[10px] uppercase tracking-widest font-medium hover:bg-zinc-600 transition-colors">
                   Join
                 </button>
               </div>
             </div>
           </div>
-          <div className="border-t border-zinc-800 mt-12 pt-6 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-zinc-600 tracking-widest uppercase">
+          <div className="border-t border-zinc-800/60 mt-12 pt-6 flex flex-col sm:flex-row justify-between items-center gap-4 text-[10px] text-zinc-700 tracking-widest uppercase">
             <p>© {new Date().getFullYear()} EXILES. All rights reserved.</p>
             <div className="flex gap-6">
-              <span className="hover:text-white cursor-pointer transition">Instagram</span>
-              <span className="hover:text-white cursor-pointer transition">Twitter</span>
+              <span className="hover:text-zinc-400 cursor-pointer transition-colors">Instagram</span>
+              <span className="hover:text-zinc-400 cursor-pointer transition-colors">Twitter</span>
             </div>
           </div>
         </div>
