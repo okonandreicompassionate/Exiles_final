@@ -8,6 +8,7 @@ import { useCart } from "../../components/cartProvider";
 import { supabase } from "../../../lib/supabase";
 import { MdOutlineChevronLeft } from "react-icons/md";
 import { HiOutlineArrowLeft } from "react-icons/hi";
+import { FiArrowLeft } from "react-icons/fi";
 
 type Variant = {
   id: string;
@@ -149,7 +150,7 @@ export default function ProductPage() {
       {/* NAV */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-zinc-950/80 backdrop-blur-xl border-b border-zinc-800/60">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-8 py-4 flex items-center">
-        import { FiArrowLeft } from "react-icons/fi";
+        
 
 <button
   onClick={() => router.back()}
