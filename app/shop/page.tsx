@@ -118,9 +118,9 @@ export default function LandingPage() {
           </div>
 
           {/* LOGO */}
-          <h1 className="font-bold tracking-[0.5em] text-sm uppercase flex-1 text-center">
+         <Link href="/shop"> <h1 className="font-bold tracking-[0.5em] text-sm uppercase flex-1 text-center">
             EX1LES
-          </h1>
+          </h1> </Link>
 
           {/* RIGHT NAV */}
           <div className="flex items-center justify-end flex-1">
@@ -382,7 +382,7 @@ export default function LandingPage() {
         <div className="max-w-[1400px] mx-auto px-4 sm:px-8 py-12 sm:py-16">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             <div className="col-span-2 md:col-span-1">
-              <h2 className="font-bold tracking-[0.5em] text-sm mb-4">EXILES</h2>
+              <h2 className="font-bold tracking-[0.5em] text-sm mb-4">EX1LES</h2>
               <p className="text-xs text-zinc-600 leading-relaxed">
                 Clean silhouettes. Premium everyday wear built for presence.
               </p>
@@ -390,7 +390,7 @@ export default function LandingPage() {
             <div>
               <p className="text-[10px] tracking-[0.3em] uppercase text-zinc-500 mb-4">Shop</p>
               <ul className="space-y-2.5 text-xs text-zinc-600">
-                <li onClick={() => setActiveFilter("NEW")} className="hover:text-zinc-300 cursor-pointer transition-colors">New Arrivals</li>
+                <li onClick={() => setActiveFilter("NEW")} className="hover:text-zinc-300 cursor-pointer transition-colors">Latest drop</li>
                 <li onClick={() => setActiveFilter("Hoodies")} className="hover:text-zinc-300 cursor-pointer transition-colors">Hoodies</li>
                 <li onClick={() => setActiveFilter("Jackets")} className="hover:text-zinc-300 cursor-pointer transition-colors">Jackets</li>
               </ul>
@@ -419,7 +419,7 @@ export default function LandingPage() {
             </div>
           </div>
           <div className="border-t border-zinc-800/60 mt-12 pt-6 flex flex-col sm:flex-row justify-between items-center gap-4 text-[10px] text-zinc-700 tracking-widest uppercase">
-            <p>© {new Date().getFullYear()} EXILES. All rights reserved.</p>
+            <p>© {new Date().getFullYear()} EX1LES. All rights reserved.</p>
             <div className="flex gap-6">
               <span className="hover:text-zinc-400 cursor-pointer transition-colors">Instagram</span>
               <span className="hover:text-zinc-400 cursor-pointer transition-colors">Twitter</span>

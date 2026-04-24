@@ -122,7 +122,7 @@ export default function CartPage() {
           <p className="text-zinc-600 text-xs tracking-wide">Add something to get started</p>
         </div>
         <Link
-          href="/"
+          href="/shop"
           className="bg-white text-zinc-950 text-xs tracking-[0.2em] uppercase px-8 py-3.5 rounded-xl font-semibold hover:bg-zinc-100 transition-colors"
         >
           Shop Now

@@ -6,6 +6,8 @@ import Link from "next/link";
 import { ShoppingCart, ArrowLeft, ChevronRight } from "lucide-react";
 import { useCart } from "../../components/cartProvider";
 import { supabase } from "../../../lib/supabase";
+import { MdOutlineChevronLeft } from "react-icons/md";
+import { HiOutlineArrowLeft } from "react-icons/hi";
 
 type Variant = {
   id: string;
@@ -147,18 +149,25 @@ export default function ProductPage() {
       {/* NAV */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-zinc-950/80 backdrop-blur-xl border-b border-zinc-800/60">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-8 py-4 flex items-center">
-          <button
-            onClick={() => router.back()}
-            className="flex items-center gap-2 text-zinc-500 hover:text-white transition-colors text-xs tracking-widest uppercase flex-1"
-          >
-            <ArrowLeft size={14} strokeWidth={1.5} />
-            Back
-          </button>
+        import { FiArrowLeft } from "react-icons/fi";
 
-          <Link href="/" className="font-bold tracking-[0.5em] text-sm uppercase flex-1 text-center">
-            EXILES
-          </Link>
+<button
+  onClick={() => router.back()}
+  className="group flex items-center gap-2 text-zinc-500 hover:text-white transition-all duration-300 text-xs tracking-widest uppercase flex-1"
+>
+  <FiArrowLeft 
+    size={14} 
+    className="transition-transform duration-300 group-hover:-translate-x-1"
+  />
+  <span className="group-hover:tracking-[0.2em] transition-all duration-300">
+    Back
+  </span>
+</button>
 
+
+<Link href="/shop"> <h1 className="font-bold tracking-[0.5em] text-sm uppercase flex-1 text-center">
+            EX1LES
+          </h1> </Link>
           <div className="flex justify-end flex-1">
             <Link href="/cart" className="relative text-zinc-400 hover:text-white transition-colors">
               <ShoppingCart size={18} strokeWidth={1.5} />
