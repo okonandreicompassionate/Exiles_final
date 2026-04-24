@@ -56,7 +56,7 @@ export default function RootLayout({
         />
       </head>
 
-      <body className="font-sans bg-black text-white antialiased">
+      <body className="font-sans bg-white text-white antialiased">
         <CartProvider>{children}</CartProvider>
       </body>
     </html>
