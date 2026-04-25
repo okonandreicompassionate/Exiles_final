@@ -33,7 +33,7 @@ type Product = {
 
 export const CATEGORIES = [
   { name: "ALL", label: "All", icon: FiGrid },
-  { name: "NEW", label: "New Arrivals", icon: FiStar },
+  { name: "NEW", label: "New Drops", icon: FiStar },
   { name: "Hoodies", label: "Hoodies", icon: GiHoodie },
   { name: "Jackets", label: "Jackets", icon: FiLayers },
   { name: "Tees", label: "T-Shirts", icon: FiShoppingBag },
@@ -265,6 +265,11 @@ export default function LandingPage() {
               <option value="NEW">New</option>
               <option value="Hoodies">Hoodies</option>
               <option value="Jackets">Jackets</option>
+              <option value="TROUSERS">TROUSERS</option>
+              <option value="T-SHIRTS">T-SHIRTS</option>
+              <option value="ACCESSORIES">ACCESSORIES</option>
+              
+
             </select>
             <ChevronDown size={11} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
           </div>
