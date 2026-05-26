@@ -381,11 +381,23 @@ export default function LandingPage() {
           </div>
         )}
       </div>
-      <section>
-       <p> note this is a predrop the sale off note the drop date will e announced in days to follow
-        </p>
-        </section>
+     <section className="w-full flex justify-center px-4 py-6">
+  <div className="max-w-2xl rounded-2xl border border-neutral-800 bg-neutral-900/70 p-5 text-center shadow-lg backdrop-blur">
+    <p className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-400">
+      Pre-Drop Notice
+    </p>
 
+    <h2 className="mt-2 text-2xl font-bold text-white">
+      Early Access Before the Official Drop
+    </h2>
+
+    <p className="mt-3 text-sm leading-relaxed text-neutral-300">
+      This is a pre-drop release. The official launch date for the full drop
+      will be announced in the coming days. Stay locked in — limited pieces
+      may go live before the main release.
+    </p>
+  </div>
+</section>
       {/* FOOTER */}
       <footer className="bg-zinc-900/50 text-white border-t border-zinc-800/60">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-8 py-12 sm:py-16">
