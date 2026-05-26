@@ -139,7 +139,7 @@ export default function LandingPage() {
       {/* HERO */}
       <div className="relative w-full h-screen overflow-hidden">
         <img
-          src="https://i.imgur.com/8VAugsc.jpeg"
+          src="https://i.imgur.com/XOTz8wd.jpeg"
           alt="Hero"
           className="w-full h-full object-cover object-top"
         />
@@ -156,7 +156,7 @@ export default function LandingPage() {
             <span className="font-semibold">Culture</span>
           </h2>
           <p className="text-[10px] tracking-[0.4em] uppercase text-zinc-400 mt-5">
-            Designed to Stand Out
+            Drop coming soon
           </p>
         </div>
 
@@ -381,6 +381,10 @@ export default function LandingPage() {
           </div>
         )}
       </div>
+      <section>
+       <p> note this is a predrop the sale off note the drop date will e announced in days to follow
+        </p>
+        </section>
 
       {/* FOOTER */}
       <footer className="bg-zinc-900/50 text-white border-t border-zinc-800/60">
