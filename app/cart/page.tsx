@@ -64,52 +64,28 @@ export default function CartPage() {
   };
 
   const handleCheckout = async () => {
-    if (!form.email || !form.name || !form.phone || !form.address || !form.state) {
-      alert("Please fill in all required fields!");
-      return;
-    }
+  if (!form.email || !form.name || !form.phone || !form.address || !form.state) {
+    alert("Please fill in all required fields!");
+    return;
+  }
 
-    setLoading(true);
+  setLoading(true);
 
-    try {
-      const response = await fetch("/api/paystack", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: form.email,
-          amount: grandTotal,
-          metadata: {
-            name: form.name,
-            phone: form.phone,
-            whatsapp: form.whatsapp,
-            address: form.address,
-            city: form.city,
-            state: form.state,
-            delivery_fee: deliveryFee,
-            items: cartItems.map((item) => ({
-              name: item.name,
-              size: item.size,
-              quantity: item.quantity,
-              price: item.price,
-            })),
-          },
-        }),
-      });
-
-      const data = await response.json();
-
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        alert("Checkout failed. Try again!");
-        setLoading(false);
-      }
-    } catch (err) {
-      console.error("Checkout error:", err);
-      alert("Something went wrong. Try again!");
-      setLoading(false);
-    }
+  const orderData = {
+    form,
+    cartItems,
+    subtotal: orderTotal,
+    deliveryFee,
+    total: grandTotal,
   };
+
+  localStorage.setItem(
+    "pendingOrder",
+    JSON.stringify(orderData)
+  );
+
+  window.location.href = "/pay";
+};
 
   if (cartItems.length === 0) {
     return (
@@ -420,7 +396,7 @@ export default function CartPage() {
                     : "bg-white text-zinc-950 hover:bg-zinc-100 shadow-lg shadow-white/5"
                 }`}
               >
-                {loading ? "Redirecting..." : "Pay with Paystack"}
+                {loading ? "Redirecting..." : "Proceed to payment"}
               </button>
 
               <p className="text-zinc-700 text-[10px] tracking-wide text-center">

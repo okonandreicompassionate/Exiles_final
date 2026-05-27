@@ -9,15 +9,16 @@ export default function PayPage() {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    const data = localStorage.getItem("pendingOrder");
+    const savedOrder = localStorage.getItem("pendingOrder");
 
-    if (data) {
-      setOrder(JSON.parse(data));
+    if (savedOrder) {
+      setOrder(JSON.parse(savedOrder));
     }
   }, []);
 
   const copyAccount = async () => {
     await navigator.clipboard.writeText("1234567890");
+
     setCopied(true);
 
     setTimeout(() => {
@@ -34,16 +35,16 @@ export default function PayPage() {
   }
 
   const whatsappMessage = encodeURIComponent(`
-NEW ORDER — EXILES
+NEW ORDER - EXILES
 
 Name: ${order.form.name}
 Phone: ${order.form.phone}
 State: ${order.form.state}
 
-Total Paid: ₦${(order.total / 100).toLocaleString()}
+Total: ₦${(order.total / 100).toLocaleString()}
 
 I have completed payment.
-  `);
+`);
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white px-4 py-10">
@@ -61,7 +62,6 @@ I have completed payment.
 
         <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6 space-y-6">
 
-          {/* TOTAL */}
           <div>
             <p className="text-zinc-500 text-xs uppercase tracking-widest mb-2">
               Amount
@@ -72,7 +72,6 @@ I have completed payment.
             </h2>
           </div>
 
-          {/* ACCOUNT */}
           <div className="border-t border-zinc-800 pt-6 space-y-4">
 
             <div>
@@ -81,7 +80,7 @@ I have completed payment.
               </p>
 
               <p className="text-lg font-medium">
-                Opay
+                OPay
               </p>
             </div>
 
@@ -97,7 +96,7 @@ I have completed payment.
 
                 <button
                   onClick={copyAccount}
-                  className="text-zinc-400 hover:text-white transition-colors"
+                  className="text-zinc-400 hover:text-white"
                 >
                   <Copy size={18} />
                 </button>
@@ -123,7 +122,6 @@ I have completed payment.
 
           </div>
 
-          {/* WHATSAPP */}
           <a
             href={`https://wa.me/234XXXXXXXXXX?text=${whatsappMessage}`}
             target="_blank"
@@ -133,14 +131,14 @@ I have completed payment.
           </a>
 
           <p className="text-zinc-600 text-xs text-center leading-relaxed">
-            After making payment, tap the button above and send your payment proof on WhatsApp for confirmation.
+            After payment, tap the button above and send your proof of payment on WhatsApp.
           </p>
 
         </div>
 
         <Link
           href="/shop"
-          className="block text-center text-zinc-600 hover:text-white transition-colors text-xs uppercase tracking-[0.2em] mt-6"
+          className="block text-center text-zinc-600 hover:text-white text-xs uppercase tracking-[0.2em] mt-6"
         >
           Continue Shopping
         </Link>
