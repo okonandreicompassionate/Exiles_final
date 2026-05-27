@@ -80,7 +80,7 @@ I have completed payment.
               </p>
 
               <p className="text-lg font-medium">
-                OPay
+                PalmPay
               </p>
             </div>
 
@@ -91,7 +91,7 @@ I have completed payment.
 
               <div className="flex items-center justify-between bg-zinc-950 border border-zinc-800 rounded-2xl px-4 py-4">
                 <span className="text-xl font-bold tracking-wider">
-                  1234567890
+                  7058077794
                 </span>
 
                 <button
@@ -116,14 +116,14 @@ I have completed payment.
               </p>
 
               <p className="text-lg font-medium">
-                YOUR NAME
+                Ola Okon
               </p>
             </div>
 
           </div>
 
           <a
-            href={`https://wa.me/234XXXXXXXXXX?text=${whatsappMessage}`}
+            href={`https://wa.me/2347058077794?text=${whatsappMessage}`}
             target="_blank"
             className="block w-full text-center py-4 bg-white text-zinc-950 rounded-2xl font-semibold tracking-[0.2em] uppercase text-xs hover:bg-zinc-200 transition-colors"
           >
