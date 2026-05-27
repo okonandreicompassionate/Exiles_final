@@ -424,7 +424,7 @@ export default function CartPage() {
               </button>
 
               <p className="text-zinc-700 text-[10px] tracking-wide text-center">
-                Fill all required  fields before paying also check out our <a href="/shipping_policy">shipping policy</a>
+                Fill all required  fields before paying also check out our <a className="text-indigo-900" href="/shipping_policy">shipping policy</a>
               </p>
 
               <Link
