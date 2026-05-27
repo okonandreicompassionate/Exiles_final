@@ -17,10 +17,10 @@ const NIGERIAN_STATES = [
 const EXPRESS_STATES = ["Lagos", "Abuja", "Rivers"];
 
 const DELIVERY_PRICES: Record<string, number> = {
-  Lagos: 1500,
-  Abuja: 2000,
-  Rivers: 2000,
-  other: 3500,
+  Lagos: 3000,
+  Abuja: 8000,
+  Rivers: 8000,
+  other: 10500,
 };
 
 function getDeliveryFee(state: string): number {
