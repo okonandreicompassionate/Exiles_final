@@ -17,10 +17,10 @@ const NIGERIAN_STATES = [
 const EXPRESS_STATES = ["Lagos", "Abuja", "Rivers"];
 
 const DELIVERY_PRICES: Record<string, number> = {
-  Lagos: 3000,
-  Abuja: 8000,
-  Rivers: 8000,
-  other: 10500,
+  Lagos: 6000,
+  Abuja: 11000,
+  Rivers: 11000,
+  other: 11500,
 };
 
 function getDeliveryFee(state: string): number {
@@ -345,7 +345,7 @@ export default function CartPage() {
                             </option>
                           ))}
                         </optgroup>
-                        <optgroup label="Standard ₦3,500">
+                        <optgroup label="Standard ₦11,500">
                           {NIGERIAN_STATES.map((s) => (
                             <option key={s} value={s}>{s}</option>
                           ))}
@@ -424,7 +424,7 @@ export default function CartPage() {
               </button>
 
               <p className="text-zinc-700 text-[10px] tracking-wide text-center">
-                Fill all required fields before paying
+                Fill all required fields before paying also check out our <a href="/shipping_policy">shipping policy</a>
               </p>
 
               <Link
