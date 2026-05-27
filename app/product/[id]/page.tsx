@@ -126,6 +126,25 @@ export default function ProductPage() {
     );
   }
 
+
+  <section className="w-full flex justify-center px-4 py-6">
+  <div className="max-w-2xl rounded-2xl border border-neutral-800 bg-neutral-900/70 p-5 text-center shadow-lg backdrop-blur">
+    <p className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-400">
+      Pre-Drop Notice
+    </p>
+
+    <h2 className="mt-2 text-2xl font-bold text-white">
+      Early Access Before the Official Drop
+    </h2>
+
+    <p className="mt-3 text-sm leading-relaxed text-neutral-300">
+      This is a pre-drop release. The official launch date for the full drop
+      will be announced in the coming days. Stay locked in — limited pieces
+      may go live before the main release.
+    </p>
+  </div>
+</section>
+
   if (!product) {
     return (
       <div className="min-h-screen bg-zinc-950 text-white flex items-center justify-center">
@@ -359,11 +378,11 @@ export default function ProductPage() {
               <div className="grid grid-cols-2 gap-3 mt-4">
                 <div className="bg-zinc-900/60 rounded-xl p-4 border border-zinc-800/40">
                   <p className="text-[9px] tracking-[0.3em] uppercase text-zinc-600 mb-1">Delivery</p>
-                  <p className="text-xs text-zinc-300">3–4 working days</p>
+                  <p className="text-xs text-zinc-300">3–4 working days after drop</p>
                 </div>
                 <div className="bg-zinc-900/60 rounded-xl p-4 border border-zinc-800/40">
                   <p className="text-[9px] tracking-[0.3em] uppercase text-zinc-600 mb-1">Returns</p>
-                  <p className="text-xs text-zinc-300">7 day policy</p>
+                  <p className="text-xs text-zinc-300">2 day policy</p>
                 </div>
                 <div className="bg-zinc-900/60 rounded-xl p-4 border border-zinc-800/40">
                   <p className="text-[9px] tracking-[0.3em] uppercase text-zinc-600 mb-1">Material</p>
@@ -371,7 +390,7 @@ export default function ProductPage() {
                 </div>
                 <div className="bg-zinc-900/60 rounded-xl p-4 border border-zinc-800/40">
                   <p className="text-[9px] tracking-[0.3em] uppercase text-zinc-600 mb-1">Origin</p>
-                  <p className="text-xs text-zinc-300">EXILES Studio</p>
+                  <p className="text-xs text-zinc-300">EX1LES Studio</p>
                 </div>
               </div>
             </div>

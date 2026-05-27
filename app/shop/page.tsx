@@ -381,6 +381,10 @@ export default function LandingPage() {
           </div>
         )}
       </div>
+
+
+
+      
      <section className="w-full flex justify-center px-4 py-6">
   <div className="max-w-2xl rounded-2xl border border-neutral-800 bg-neutral-900/70 p-5 text-center shadow-lg backdrop-blur">
     <p className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-400">
@@ -398,6 +402,10 @@ export default function LandingPage() {
     </p>
   </div>
 </section>
+
+
+
+
       {/* FOOTER */}
       <footer className="bg-zinc-900/50 text-white border-t border-zinc-800/60">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-8 py-12 sm:py-16">
