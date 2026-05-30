@@ -241,7 +241,7 @@ export default function AdminPage() {
             View Shop
           </button>
 
-          <button onClick={() => router.push("/admin/edit")} className="text-xs tracking-widest uppercase text-zinc-500 hover:text-white transition-colors">
+          <button onClick={() => router.push("/Admin/edit")} className="text-xs tracking-widest uppercase text-zinc-500 hover:text-white transition-colors">
   Edit Products
 </button>
         </div>

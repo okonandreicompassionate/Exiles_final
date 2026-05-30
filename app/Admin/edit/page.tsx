@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
-import { Pencil, Trash2, Plus, CheckCircle, X, ChevronDown, ChevronUp } from "lucide-react";
+import { Trash2, Plus, CheckCircle, X, ChevronDown, ChevronUp } from "lucide-react";
 
 const ADMIN_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_PASSWORD ?? "";
 
@@ -20,7 +20,7 @@ type Product = {
   id: string;
   name: string;
   description: string;
-  price: number; // in kobo
+  price: number;
   image_url: string;
   category_id: string;
   is_featured: boolean;
@@ -82,7 +82,6 @@ export default function EditProductsPage() {
 
     setProducts(parsed);
 
-    // seed editData
     const seed: Record<string, Product> = {};
     parsed.forEach((p) => { seed[p.id] = JSON.parse(JSON.stringify(p)); });
     setEditData(seed);
@@ -137,9 +136,7 @@ export default function EditProductsPage() {
     setSaving(id);
 
     try {
-      const priceInKobo = Math.round(parseFloat(String(p.price / 100)) * 100);
-
-      // Update product
+      // 1. Update product core fields
       const { error: pErr } = await supabase
         .from("products")
         .update({
@@ -151,34 +148,57 @@ export default function EditProductsPage() {
           is_featured: p.is_featured,
         })
         .eq("id", id);
-      if (pErr) throw new Error(pErr.message);
+      if (pErr) throw new Error("Product update failed: " + pErr.message);
 
-      // Delete old variants, reinsert
-      await supabase.from("variants").delete().eq("product_id", id);
+      // 2. Delete ALL existing variants for this product
+      const { error: delVErr } = await supabase
+        .from("variants")
+        .delete()
+        .eq("product_id", id);
+      if (delVErr) throw new Error("Failed to clear variants: " + delVErr.message);
+
+      // 3. Reinsert variants fresh — no duplicates possible
       if (p.variants.length > 0) {
-        const { error: vErr } = await supabase.from("variants").insert(
-          p.variants.map((v) => ({ product_id: id, size: v.size, stock: v.stock }))
-        );
-        if (vErr) throw new Error(vErr.message);
+        const { error: vErr } = await supabase
+          .from("variants")
+          .insert(
+            p.variants.map((v) => ({
+              product_id: id,
+              size: v.size,
+              stock: v.stock,
+            }))
+          );
+        if (vErr) throw new Error("Failed to save variants: " + vErr.message);
       }
 
-      // Delete old images, reinsert
-      await supabase.from("product_images").delete().eq("product_id", id);
-      const validImages = p.product_images.filter((img) => img.image_url.trim() !== "");
+      // 4. Delete ALL existing images for this product
+      const { error: delIErr } = await supabase
+        .from("product_images")
+        .delete()
+        .eq("product_id", id);
+      if (delIErr) throw new Error("Failed to clear images: " + delIErr.message);
+
+      // 5. Reinsert valid images fresh — no duplicates possible
+      const validImages = p.product_images.filter(
+        (img) => img.image_url.trim() !== ""
+      );
       if (validImages.length > 0) {
-        const { error: iErr } = await supabase.from("product_images").insert(
-          validImages.map((img, idx) => ({
-            product_id: id,
-            image_url: img.image_url.trim(),
-            position: idx,
-          }))
-        );
-        if (iErr) throw new Error(iErr.message);
+        const { error: iErr } = await supabase
+          .from("product_images")
+          .insert(
+            validImages.map((img, idx) => ({
+              product_id: id,
+              image_url: img.image_url.trim(),
+              position: idx,
+            }))
+          );
+        if (iErr) throw new Error("Failed to save images: " + iErr.message);
       }
 
       setSaved(id);
       setTimeout(() => setSaved(null), 3000);
       await fetchProducts();
+
     } catch (err: any) {
       alert("Save failed: " + err.message);
     }
@@ -276,7 +296,6 @@ export default function EditProductsPage() {
                 className="flex items-center gap-4 px-5 py-4 cursor-pointer hover:bg-zinc-800/20 transition-colors"
                 onClick={() => toggleExpand(product.id)}
               >
-                {/* Thumbnail */}
                 <div className="w-12 h-12 rounded-lg overflow-hidden bg-zinc-800 flex-shrink-0">
                   {product.image_url && (
                     <img
@@ -287,7 +306,6 @@ export default function EditProductsPage() {
                   )}
                 </div>
 
-                {/* Info */}
                 <div className="flex-1 min-w-0">
                   <p className="text-sm text-white font-medium truncate">{product.name}</p>
                   <p className="text-xs text-zinc-500 mt-0.5">
@@ -301,7 +319,6 @@ export default function EditProductsPage() {
                   </p>
                 </div>
 
-                {/* Actions */}
                 <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                   {saved === product.id && (
                     <span className="flex items-center gap-1 text-green-400 text-[10px]">
@@ -327,13 +344,10 @@ export default function EditProductsPage() {
               {/* EXPANDED EDIT FORM */}
               {isOpen && (
                 <div className="border-t border-zinc-800/60 px-5 py-6 space-y-6">
-
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
                     {/* LEFT */}
                     <div className="space-y-4">
-
-                      {/* Basic fields */}
                       <div>
                         <p className="text-[10px] tracking-[0.4em] uppercase text-zinc-500 mb-3">
                           Product Info
@@ -354,7 +368,6 @@ export default function EditProductsPage() {
                             className={`${inputClass} resize-none`}
                           />
                           <div className="grid grid-cols-2 gap-3">
-                            {/* Price — display in naira, store in kobo */}
                             <div className="relative">
                               <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 text-sm">₦</span>
                               <input
@@ -383,7 +396,6 @@ export default function EditProductsPage() {
                             </select>
                           </div>
 
-                          {/* Featured toggle */}
                           <label className="flex items-center gap-3 px-4 py-3 bg-zinc-900 border border-zinc-800 rounded-xl cursor-pointer hover:border-zinc-700 transition-colors">
                             <div
                               className={`w-10 h-5 rounded-full transition-colors relative ${ed.is_featured ? "bg-white" : "bg-zinc-700"}`}
@@ -454,7 +466,6 @@ export default function EditProductsPage() {
 
                     {/* RIGHT — Images */}
                     <div className="space-y-4">
-                      {/* Main image */}
                       <div>
                         <p className="text-[10px] tracking-[0.4em] uppercase text-zinc-500 mb-3">
                           Main Image
@@ -477,7 +488,6 @@ export default function EditProductsPage() {
                         )}
                       </div>
 
-                      {/* Gallery images */}
                       <div>
                         <div className="flex items-center justify-between mb-3">
                           <p className="text-[10px] tracking-[0.4em] uppercase text-zinc-500">
@@ -520,6 +530,12 @@ export default function EditProductsPage() {
                             </div>
                           ))}
                         </div>
+
+                        <div className="mt-4 px-4 py-3 bg-zinc-900/60 rounded-xl border border-zinc-800/40">
+                          <p className="text-[10px] text-zinc-500 leading-relaxed">
+                            💡 Upload at <span className="text-zinc-300">imgur.com</span> → right click → Copy Image Address → paste above
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -537,6 +553,11 @@ export default function EditProductsPage() {
                     >
                       {saving === product.id ? "Saving..." : "Save Changes"}
                     </button>
+                    {saved === product.id && (
+                      <p className="text-green-400 text-[10px] tracking-wide text-center mt-3 flex items-center justify-center gap-1">
+                        <CheckCircle size={11} /> Changes saved — live on shop now
+                      </p>
+                    )}
                   </div>
                 </div>
               )}
