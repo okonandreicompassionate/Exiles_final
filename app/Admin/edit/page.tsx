@@ -54,11 +54,15 @@ export default function EditProductsPage() {
   }, [authed]);
 
   async function fetchCategories() {
+    if (!supabase) return;
+
     const { data } = await supabase.from("categories").select("id, name, slug");
     setCategories(data ?? []);
   }
 
   async function fetchProducts() {
+    if (!supabase) return;
+
     const { data, error } = await supabase
       .from("products")
       .select(`
@@ -132,6 +136,11 @@ export default function EditProductsPage() {
   }
 
   async function handleSave(id: string) {
+    if (!supabase) {
+      alert("Supabase is not configured. Add your environment variables first.");
+      return;
+    }
+
     const p = editData[id];
     setSaving(id);
 
@@ -207,6 +216,11 @@ export default function EditProductsPage() {
   }
 
   async function handleDelete(id: string) {
+    if (!supabase) {
+      alert("Supabase is not configured. Add your environment variables first.");
+      return;
+    }
+
     if (!confirm("Delete this product? This cannot be undone.")) return;
     setDeleting(id);
     await supabase.from("variants").delete().eq("product_id", id);

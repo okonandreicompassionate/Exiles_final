@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useCart } from "../components/cartProvider";
-import { supabase } from "../../lib/supabase";
+import { isSupabaseConfigured, supabase } from "../../lib/supabase";
 import { ShoppingCart, ChevronDown } from "lucide-react";
 import { FiGrid, FiStar, FiBox, FiLayers, FiShoppingBag } from "react-icons/fi";
 import { GiHoodie, GiTrousers } from "react-icons/gi";
@@ -49,6 +49,12 @@ export default function LandingPage() {
 
   useEffect(() => {
     async function fetchProducts() {
+      if (!isSupabaseConfigured || !supabase) {
+        setProducts([]);
+        setLoading(false);
+        return;
+      }
+
       const { data, error } = await supabase
         .from("products")
         .select(`
@@ -64,7 +70,7 @@ export default function LandingPage() {
         .order("created_at", { ascending: false });
 
       if (error) {
-        console.error("Error fetching products:", error.message);
+        console.warn("Error fetching products:", error.message);
         setLoading(false);
         return;
       }
@@ -153,7 +159,7 @@ export default function LandingPage() {
           </p>
           <h2 className="text-5xl sm:text-7xl font-light leading-none tracking-tight text-white">
             EX1LES<br />
-            <span className="font-semibold">Culture</span>
+            <span className="font-semibold tracking-[0.1em]">Culture</span>
           </h2>
           <p className="text-[10px] tracking-[0.4em] uppercase text-zinc-400 mt-5">
             Drop coming soon

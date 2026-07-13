@@ -1,0 +1,22 @@
+
+> exiles-final@0.1.0 dev
+> next dev --port 3001
+
+▲ Next.js 16.2.2 (Turbopack)
+- Local:         http://localhost:3001
+- Network:       http://192.168.137.236:3001
+✓ Ready in 2.9s
+Creating turbopack project {
+  dir: 'C:\\Users\\AndreiOkon(Zoracom-N\\Desktop\\Exiles_final',
+  testMode: true
+}
+
+ GET /shop 200 in 2.3s (next.js: 574ms, application-code: 1764ms)
+ HEAD /shop 200 in 165ms (next.js: 18ms, application-code: 147ms)
+ HEAD / 307 in 306ms (next.js: 127ms, application-code: 179ms)
+✓ Compiled in 3s
+ GET /shop 200 in 792ms (next.js: 171ms, application-code: 621ms)
+✓ Compiled in 265ms
+ GET /shop 200 in 1195ms (next.js: 192ms, application-code: 1003ms)
+✓ Compiled in 287ms
+ GET /shop 200 in 1148ms (next.js: 228ms, application-code: 920ms)

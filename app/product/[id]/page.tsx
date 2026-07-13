@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { ShoppingCart, ArrowLeft, ChevronRight } from "lucide-react";
 import { useCart } from "../../components/cartProvider";
-import { supabase } from "../../../lib/supabase";
+import { isSupabaseConfigured, supabase } from "../../../lib/supabase";
 import { MdOutlineChevronLeft } from "react-icons/md";
 import { HiOutlineArrowLeft } from "react-icons/hi";
 import { FiArrowLeft } from "react-icons/fi";
@@ -47,6 +47,11 @@ export default function ProductPage() {
 
   useEffect(() => {
     async function fetchProduct() {
+      if (!isSupabaseConfigured || !supabase) {
+        setLoading(false);
+        return;
+      }
+
       const { data, error } = await supabase
         .from("products")
         .select(`
@@ -63,7 +68,7 @@ export default function ProductPage() {
         .single();
 
       if (error || !data) {
-        console.error("Product fetch error:", error?.message);
+        console.warn("Product fetch error:", error?.message);
         setLoading(false);
         return;
       }

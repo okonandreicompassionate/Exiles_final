@@ -8,7 +8,7 @@
 /* Coolvetica font */
 @font-face {
   font-family: "Coolvetica";
-  src: url("/fonts/Coolvetica-Regular.woff2") format("woff2");
+  src: url("/fonts/CoolveticaRg-Regular V2.woff2") format("woff2");
   font-weight: normal;
   font-style: normal;
   font-display: swap;
@@ -32,6 +32,34 @@
 
 .animate-marquee {
   animation: marquee 25s linear infinite;
+}
+
+@keyframes slowZoom {
+  0% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(1.1);
+  }
+}
+
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slow-zoom {
+  animation: slowZoom 20s ease-out forwards;
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 1s ease-out forwards;
 }
 
 

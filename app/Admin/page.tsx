@@ -47,6 +47,8 @@ export default function AdminPage() {
   }, [authed]);
 
   async function fetchCategories() {
+    if (!supabase) return;
+
     const { data } = await supabase.from("categories").select("id, name, slug");
     setCategories(data ?? []);
   }
@@ -99,6 +101,11 @@ export default function AdminPage() {
   }
 
   async function handleSubmit() {
+    if (!supabase) {
+      alert("Supabase is not configured. Add your environment variables first.");
+      return;
+    }
+
     if (!form.name || !form.price || !form.image_url || !form.category_id) {
       alert("Fill in all required fields!");
       return;
