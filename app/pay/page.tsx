@@ -3,10 +3,12 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Copy, CheckCircle2 } from "lucide-react";
+import { useToast } from "../components/toastProvider";
 
 export default function PayPage() {
   const [order, setOrder] = useState<any>(null);
   const [copied, setCopied] = useState(false);
+  const { showToast } = useToast();
 
   useEffect(() => {
     const savedOrder = localStorage.getItem("pendingOrder");
@@ -17,9 +19,10 @@ export default function PayPage() {
   }, []);
 
   const copyAccount = async () => {
-    await navigator.clipboard.writeText("1234567890");
+    await navigator.clipboard.writeText("7058077794");
 
     setCopied(true);
+    showToast("Account number copied", "success");
 
     setTimeout(() => {
       setCopied(false);
@@ -28,8 +31,9 @@ export default function PayPage() {
 
   if (!order) {
     return (
-      <div className="min-h-screen bg-zinc-950 text-white flex items-center justify-center">
-        Loading...
+      <div className="min-h-screen bg-white text-zinc-900 flex items-center justify-center gap-3">
+        <div className="w-5 h-5 rounded-full border-2 border-zinc-900/15 border-t-zinc-900 animate-spin" />
+        <span className="text-sm text-zinc-500 tracking-wide">Loading order...</span>
       </div>
     );
   }
@@ -47,7 +51,7 @@ I have completed payment.
 `);
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white px-4 py-10">
+    <div className="min-h-screen bg-white text-zinc-900 px-4 py-10">
       <div className="max-w-xl mx-auto">
 
         <div className="mb-8">
@@ -60,7 +64,7 @@ I have completed payment.
           </h1>
         </div>
 
-        <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6 space-y-6">
+        <div className="glass-strong rounded-3xl p-6 space-y-6">
 
           <div>
             <p className="text-zinc-500 text-xs uppercase tracking-widest mb-2">
@@ -72,7 +76,19 @@ I have completed payment.
             </h2>
           </div>
 
-          <div className="border-t border-zinc-800 pt-6 space-y-4">
+          {/* ORDER RECAP */}
+          {Array.isArray(order.cartItems) && order.cartItems.length > 0 && (
+            <div className="border-t border-zinc-900/10 pt-4 space-y-2">
+              {order.cartItems.map((item: any) => (
+                <div key={`${item.id}-${item.size}`} className="flex justify-between text-xs text-zinc-500">
+                  <span className="truncate pr-2">{item.name} ({item.size}) ×{item.quantity}</span>
+                  <span className="text-zinc-700 flex-shrink-0">₦{((item.price * item.quantity) / 100).toLocaleString()}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="border-t border-zinc-900/10 pt-6 space-y-4">
 
             <div>
               <p className="text-zinc-500 text-xs uppercase tracking-widest mb-1">
@@ -89,25 +105,19 @@ I have completed payment.
                 Account Number
               </p>
 
-              <div className="flex items-center justify-between bg-zinc-950 border border-zinc-800 rounded-2xl px-4 py-4">
+              <div className="flex items-center justify-between glass rounded-2xl px-4 py-4">
                 <span className="text-xl font-bold tracking-wider">
                   7058077794
                 </span>
 
                 <button
                   onClick={copyAccount}
-                  className="text-zinc-400 hover:text-white"
+                  className="text-zinc-500 hover:text-zinc-900 transition-colors"
+                  aria-label="Copy account number"
                 >
-                  <Copy size={18} />
+                  {copied ? <CheckCircle2 size={18} className="text-emerald-600" /> : <Copy size={18} />}
                 </button>
               </div>
-
-              {copied && (
-                <p className="text-green-500 text-xs mt-2 flex items-center gap-1">
-                  <CheckCircle2 size={12} />
-                  Copied
-                </p>
-              )}
             </div>
 
             <div>
@@ -125,12 +135,12 @@ I have completed payment.
           <a
             href={`https://wa.me/2347058077794?text=${whatsappMessage}`}
             target="_blank"
-            className="block w-full text-center py-4 bg-white text-zinc-950 rounded-2xl font-semibold tracking-[0.2em] uppercase text-xs hover:bg-zinc-200 transition-colors"
+            className="block w-full text-center py-4 bg-zinc-900 text-white rounded-2xl font-semibold tracking-[0.2em] uppercase text-xs hover:bg-zinc-700 transition-colors"
           >
             I’ve Made Payment
           </a>
 
-          <p className="text-zinc-600 text-xs text-center leading-relaxed">
+          <p className="text-zinc-500 text-xs text-center leading-relaxed">
             After payment, tap the button above and send your proof of payment on WhatsApp.
           </p>
 
@@ -138,7 +148,7 @@ I have completed payment.
 
         <Link
           href="/shop"
-          className="block text-center text-zinc-600 hover:text-white text-xs uppercase tracking-[0.2em] mt-6"
+          className="block text-center text-zinc-500 hover:text-zinc-900 text-xs uppercase tracking-[0.2em] mt-6 transition-colors"
         >
           Continue Shopping
         </Link>

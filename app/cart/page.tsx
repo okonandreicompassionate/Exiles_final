@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useState } from "react";
 import { ArrowLeft, ShoppingBag, Truck, ChevronDown } from "lucide-react";
 import { useCart } from "../components/cartProvider";
+import { useToast } from "../components/toastProvider";
+import { Logo } from "../components/Logo";
 
 const NIGERIAN_STATES = [
   "Abia", "Adamawa", "Akwa Ibom", "Anambra", "Bauchi", "Bayelsa",
@@ -35,10 +37,11 @@ function getDeliveryLabel(state: string): string {
   return `Standard Delivery (5–7 days) — ₦${DELIVERY_PRICES.other.toLocaleString()}`;
 }
 
-const inputClass = "w-full bg-zinc-900/60 border border-zinc-800 text-white text-sm px-4 py-3.5 rounded-xl outline-none focus:border-zinc-600 transition-colors placeholder-zinc-600";
+const inputClass = "w-full glass-input text-zinc-900 text-sm px-4 py-3.5 rounded-xl outline-none transition-colors placeholder-zinc-400";
 
 export default function CartPage() {
   const { cartItems, removeFromCart, updateQuantity } = useCart();
+  const { showToast } = useToast();
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState<"bag" | "delivery">("bag");
   const [form, setForm] = useState({
@@ -65,7 +68,7 @@ export default function CartPage() {
 
   const handleCheckout = async () => {
   if (!form.email || !form.name || !form.phone || !form.address || !form.state) {
-    alert("Please fill in all required fields!");
+    showToast("Please fill in all required fields", "error");
     return;
   }
 
@@ -89,17 +92,17 @@ export default function CartPage() {
 
   if (cartItems.length === 0) {
     return (
-      <div className="min-h-screen bg-zinc-950 text-white flex flex-col items-center justify-center gap-6 px-4">
-        <div className="w-16 h-16 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center">
-          <ShoppingBag size={24} strokeWidth={1.5} className="text-zinc-600" />
+      <div className="min-h-screen bg-white text-zinc-900 flex flex-col items-center justify-center gap-6 px-4">
+        <div className="w-16 h-16 rounded-2xl glass flex items-center justify-center">
+          <ShoppingBag size={24} strokeWidth={1.5} className="text-zinc-400" />
         </div>
         <div className="text-center">
-          <p className="text-white font-medium mb-1">Your bag is empty</p>
-          <p className="text-zinc-600 text-xs tracking-wide">Add something to get started</p>
+          <p className="text-zinc-900 font-medium mb-1">Your bag is empty</p>
+          <p className="text-zinc-400 text-xs tracking-wide">Add something to get started</p>
         </div>
         <Link
           href="/shop"
-          className="bg-white text-zinc-950 text-xs tracking-[0.2em] uppercase px-8 py-3.5 rounded-xl font-semibold hover:bg-zinc-100 transition-colors"
+          className="bg-zinc-900 text-white text-xs tracking-[0.2em] uppercase px-8 py-3.5 rounded-xl font-semibold hover:bg-zinc-700 transition-colors"
         >
           Shop Now
         </Link>
@@ -108,38 +111,38 @@ export default function CartPage() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white">
+    <div className="min-h-screen bg-white text-zinc-900">
 
       {/* NAV */}
-      <nav className="sticky top-0 z-50 bg-zinc-950/80 backdrop-blur-xl border-b border-zinc-800/60">
+      <nav className="sticky top-0 z-50 glass-nav">
         <div className="max-w-5xl mx-auto px-4 sm:px-8 py-4 flex items-center justify-between">
           <button
             onClick={() => step === "delivery" ? setStep("bag") : window.history.back()}
-            className="flex items-center gap-2 text-zinc-500 hover:text-white transition-colors text-xs tracking-widest uppercase"
+            className="flex items-center gap-2 text-zinc-500 hover:text-zinc-900 transition-colors text-xs tracking-widest uppercase"
           >
             <ArrowLeft size={14} strokeWidth={1.5} />
             Back
           </button>
-          <Link href="/shop" className="font-bold tracking-[0.5em] text-sm uppercase">
-            EXILES
+          <Link href="/shop">
+            <Logo textClassName="text-sm" />
           </Link>
-          <span className="text-zinc-600 text-xs tracking-widest uppercase">
+          <span className="text-zinc-400 text-xs tracking-widest uppercase">
             {cartItems.length} {cartItems.length === 1 ? "item" : "items"}
           </span>
         </div>
 
         {/* PROGRESS BAR — mobile friendly */}
-        <div className="flex border-t border-zinc-800/60">
+        <div className="flex border-t border-zinc-900/10">
           <button
             onClick={() => setStep("bag")}
-            className={`flex-1 py-2.5 text-[10px] tracking-[0.2em] uppercase transition-colors flex items-center justify-center gap-1.5 ${step === "bag" ? "text-white border-b-2 border-white" : "text-zinc-600"}`}
+            className={`flex-1 py-2.5 text-[10px] tracking-[0.2em] uppercase transition-colors flex items-center justify-center gap-1.5 ${step === "bag" ? "text-zinc-900 border-b-2 border-zinc-900" : "text-zinc-400"}`}
           >
             <ShoppingBag size={11} />
             Bag
           </button>
           <button
             onClick={() => setStep("delivery")}
-            className={`flex-1 py-2.5 text-[10px] tracking-[0.2em] uppercase transition-colors flex items-center justify-center gap-1.5 ${step === "delivery" ? "text-white border-b-2 border-white" : "text-zinc-600"}`}
+            className={`flex-1 py-2.5 text-[10px] tracking-[0.2em] uppercase transition-colors flex items-center justify-center gap-1.5 ${step === "delivery" ? "text-zinc-900 border-b-2 border-zinc-900" : "text-zinc-400"}`}
           >
             <Truck size={11} />
             Delivery
@@ -163,18 +166,19 @@ export default function CartPage() {
                   {cartItems.map((item) => (
                     <div
                       key={`${item.id}-${item.size}`}
-                      className="flex gap-4 p-4 bg-zinc-900/60 rounded-2xl border border-zinc-800/40"
+                      className="flex gap-4 p-4 glass rounded-2xl"
                     >
                       {/* THUMBNAIL */}
-                      <div className="w-20 h-24 sm:w-24 sm:h-28 bg-zinc-800 rounded-xl flex-shrink-0 overflow-hidden">
+                      <div className="w-20 h-24 sm:w-24 sm:h-28 bg-zinc-100 rounded-xl flex-shrink-0 overflow-hidden">
                         {item.image_url ? (
                           <img
                             src={item.image_url}
                             alt={item.name}
+                            loading="lazy"
                             className="w-full h-full object-cover"
                           />
                         ) : (
-                          <div className="w-full h-full bg-zinc-800" />
+                          <div className="w-full h-full bg-zinc-100" />
                         )}
                       </div>
 
@@ -182,45 +186,48 @@ export default function CartPage() {
                       <div className="flex-1 flex flex-col justify-between min-w-0">
                         <div className="flex justify-between items-start gap-2">
                           <div className="min-w-0">
-                            <h2 className="text-sm font-medium text-white truncate">
+                            <h2 className="text-sm font-medium text-zinc-900 truncate">
                               {item.name}
                             </h2>
                             <p className="text-zinc-500 text-xs mt-0.5">
                               Size {item.size}
                             </p>
                           </div>
-                          <span className="text-sm font-semibold text-white flex-shrink-0">
+                          <span className="text-sm font-semibold text-zinc-900 flex-shrink-0">
                             ₦{((item.price * item.quantity) / 100).toLocaleString()}
                           </span>
                         </div>
 
                         <div className="flex items-center justify-between mt-3">
                           {/* QTY CONTROL */}
-                          <div className="flex items-center bg-zinc-800/60 rounded-xl overflow-hidden">
+                          <div className="flex items-center glass rounded-xl overflow-hidden">
                             <button
                               onClick={() =>
                                 item.quantity > 1
                                   ? updateQuantity(item.id, item.size, item.quantity - 1)
                                   : removeFromCart(item.id, item.size)
                               }
-                              className="w-9 h-9 flex items-center justify-center text-zinc-400 hover:text-white hover:bg-zinc-700 transition-colors text-lg leading-none"
+                              className="w-9 h-9 flex items-center justify-center text-zinc-500 hover:text-zinc-900 hover:bg-zinc-900/5 transition-colors text-lg leading-none"
                             >
                               −
                             </button>
-                            <span className="w-8 text-center text-sm tabular-nums text-white">
+                            <span className="w-8 text-center text-sm tabular-nums text-zinc-900">
                               {item.quantity}
                             </span>
                             <button
                               onClick={() => updateQuantity(item.id, item.size, item.quantity + 1)}
-                              className="w-9 h-9 flex items-center justify-center text-zinc-400 hover:text-white hover:bg-zinc-700 transition-colors text-lg leading-none"
+                              className="w-9 h-9 flex items-center justify-center text-zinc-500 hover:text-zinc-900 hover:bg-zinc-900/5 transition-colors text-lg leading-none"
                             >
                               +
                             </button>
                           </div>
 
                           <button
-                            onClick={() => removeFromCart(item.id, item.size)}
-                            className="text-[10px] tracking-widest uppercase text-zinc-600 hover:text-red-400 transition-colors"
+                            onClick={() => {
+                              removeFromCart(item.id, item.size);
+                              showToast(`Removed ${item.name}`, "info");
+                            }}
+                            className="text-[10px] tracking-widest uppercase text-zinc-400 hover:text-red-500 transition-colors"
                           >
                             Remove
                           </button>
@@ -233,7 +240,7 @@ export default function CartPage() {
                 {/* CONTINUE TO DELIVERY — mobile step button */}
                 <button
                   onClick={() => setStep("delivery")}
-                  className="w-full mt-6 py-4 bg-zinc-800 text-white text-xs tracking-[0.25em] uppercase rounded-xl hover:bg-zinc-700 transition-colors flex items-center justify-center gap-2 lg:hidden"
+                  className="w-full mt-6 py-4 bg-zinc-900 text-white text-xs tracking-[0.25em] uppercase rounded-xl hover:bg-zinc-700 transition-colors flex items-center justify-center gap-2 lg:hidden"
                 >
                   Continue to Delivery
                   <Truck size={14} strokeWidth={1.5} />
@@ -333,9 +340,9 @@ export default function CartPage() {
 
                   {/* DELIVERY INFO TAG */}
                   {form.state && (
-                    <div className="flex items-center gap-3 px-4 py-3 bg-zinc-900 rounded-xl border border-zinc-800">
+                    <div className="flex items-center gap-3 px-4 py-3 glass rounded-xl">
                       <Truck size={14} strokeWidth={1.5} className="text-zinc-500 flex-shrink-0" />
-                      <p className="text-xs text-zinc-400">
+                      <p className="text-xs text-zinc-600">
                         {getDeliveryLabel(form.state)}
                       </p>
                     </div>
@@ -348,8 +355,8 @@ export default function CartPage() {
 
           {/* RIGHT — ORDER SUMMARY */}
           <div className="lg:col-span-1">
-            <div className="bg-zinc-900/60 border border-zinc-800/40 rounded-2xl p-5 space-y-4 lg:sticky lg:top-32">
-              <p className="text-[10px] tracking-[0.4em] uppercase text-zinc-500 pb-3 border-b border-zinc-800/60">
+            <div className="glass rounded-2xl p-5 space-y-4 lg:sticky lg:top-32">
+              <p className="text-[10px] tracking-[0.4em] uppercase text-zinc-500 pb-3 border-b border-zinc-900/10">
                 Order Summary
               </p>
 
@@ -360,14 +367,14 @@ export default function CartPage() {
                     <span className="text-zinc-500 truncate pr-2">
                       {item.name} ({item.size}) ×{item.quantity}
                     </span>
-                    <span className="text-zinc-300 flex-shrink-0">
+                    <span className="text-zinc-700 flex-shrink-0">
                       ₦{((item.price * item.quantity) / 100).toLocaleString()}
                     </span>
                   </div>
                 ))}
               </div>
 
-              <div className="border-t border-zinc-800/60 pt-3 space-y-2.5">
+              <div className="border-t border-zinc-900/10 pt-3 space-y-2.5">
                 <div className="flex justify-between text-xs text-zinc-500">
                   <span>Subtotal</span>
                   <span>₦{(orderTotal / 100).toLocaleString()}</span>
@@ -375,12 +382,12 @@ export default function CartPage() {
                 <div className="flex justify-between text-xs text-zinc-500">
                   <span>Delivery</span>
                   {form.state ? (
-                    <span className="text-white">₦{deliveryFee.toLocaleString()}</span>
+                    <span className="text-zinc-900">₦{deliveryFee.toLocaleString()}</span>
                   ) : (
-                    <span className="text-zinc-700 italic">Select state</span>
+                    <span className="text-zinc-400 italic">Select state</span>
                   )}
                 </div>
-                <div className="flex justify-between text-sm font-semibold text-white pt-2 border-t border-zinc-800/60">
+                <div className="flex justify-between text-sm font-semibold text-zinc-900 pt-2 border-t border-zinc-900/10">
                   <span>Total</span>
                   <span>₦{(grandTotal / 100).toLocaleString()}</span>
                 </div>
@@ -392,20 +399,23 @@ export default function CartPage() {
                 disabled={loading}
                 className={`w-full py-4 text-xs tracking-[0.25em] uppercase font-semibold rounded-xl transition-all duration-300 ${
                   loading
-                    ? "bg-zinc-800 text-zinc-500 cursor-not-allowed"
-                    : "bg-white text-zinc-950 hover:bg-zinc-100 shadow-lg shadow-white/5"
+                    ? "bg-zinc-200 text-zinc-400 cursor-not-allowed"
+                    : "bg-zinc-900 text-white hover:bg-zinc-700 shadow-lg shadow-zinc-900/10"
                 }`}
               >
                 {loading ? "Redirecting..." : "Proceed to payment"}
               </button>
 
-              <p className="text-zinc-700 text-[10px] tracking-wide text-center">
-                Fill all required  fields before paying also check out our <a className="text-indigo-900" href="/shipping_policy">shipping policy</a>
+              <p className="text-zinc-400 text-[10px] tracking-wide text-center">
+                Fill all required fields before paying — see our{" "}
+                <a className="text-zinc-600 underline hover:text-zinc-900 transition-colors" href="/shipping_policy">
+                  shipping policy
+                </a>
               </p>
 
               <Link
                 href="/shop"
-                className="block text-center text-[10px] tracking-[0.2em] uppercase text-zinc-600 hover:text-white transition-colors"
+                className="block text-center text-[10px] tracking-[0.2em] uppercase text-zinc-500 hover:text-zinc-900 transition-colors"
               >
                 ← Continue Shopping
               </Link>
@@ -416,10 +426,10 @@ export default function CartPage() {
       </div>
 
       {/* MOBILE FIXED BOTTOM CTA */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-zinc-950/95 backdrop-blur-xl border-t border-zinc-800/60 lg:hidden">
+      <div className="fixed bottom-0 left-0 right-0 p-4 glass-nav lg:hidden">
         <div className="flex items-center justify-between mb-3">
           <span className="text-xs text-zinc-500 uppercase tracking-widest">Total</span>
-          <span className="text-sm font-semibold text-white">
+          <span className="text-sm font-semibold text-zinc-900">
             ₦{(grandTotal / 100).toLocaleString()}
           </span>
         </div>
@@ -428,8 +438,8 @@ export default function CartPage() {
           disabled={loading}
           className={`w-full py-4 text-xs tracking-[0.25em] uppercase font-semibold rounded-xl transition-all ${
             loading
-              ? "bg-zinc-800 text-zinc-500 cursor-not-allowed"
-              : "bg-white text-zinc-950 hover:bg-zinc-100"
+              ? "bg-zinc-200 text-zinc-400 cursor-not-allowed"
+              : "bg-zinc-900 text-white hover:bg-zinc-700"
           }`}
         >
           {loading

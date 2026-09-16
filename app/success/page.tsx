@@ -12,20 +12,26 @@ export default function SuccessPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center gap-6 px-4">
-      <p className="text-4xl">🎉</p>
-      <h1 className="text-xl font-bold tracking-[0.2em] uppercase">
-        Order Confirmed
-      </h1>
-      <p className="text-zinc-500 text-sm tracking-widest text-center">
-        Your payment was successful. We'll be in touch soon.
-      </p>
-      <Link
-        href="/shop"
-        className="border border-white/20 text-white text-xs tracking-[0.25em] uppercase px-8 py-3 hover:bg-white hover:text-black transition-colors duration-300"
-      >
-        Continue Shopping
-      </Link>
+    <div className="min-h-screen bg-white text-zinc-900 flex flex-col items-center justify-center gap-6 px-4">
+      <div className="glass-strong rounded-3xl p-10 flex flex-col items-center gap-6 max-w-sm w-full text-center">
+        <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-3xl">
+          🎉
+        </div>
+        <div>
+          <h1 className="text-xl font-bold tracking-[0.2em] uppercase">
+            Order Confirmed
+          </h1>
+          <p className="text-zinc-500 text-sm tracking-wide text-center mt-3 leading-relaxed">
+            Your payment was successful. We'll be in touch soon with delivery updates.
+          </p>
+        </div>
+        <Link
+          href="/shop"
+          className="w-full bg-zinc-900 text-white text-xs tracking-[0.25em] uppercase px-8 py-3.5 rounded-xl font-semibold hover:bg-zinc-700 transition-colors duration-300"
+        >
+          Continue Shopping
+        </Link>
+      </div>
     </div>
   );
 }

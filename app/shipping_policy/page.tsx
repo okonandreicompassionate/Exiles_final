@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { LogoMark } from "../components/Logo";
 
 export default function ShippingPolicy() {
   const [activeSection, setActiveSection] = useState("zones");
@@ -122,8 +123,9 @@ export default function ShippingPolicy() {
         <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-12 py-5 bg-gradient-to-b from-[#050505] to-transparent font-body backdrop-blur-md">
           <a
             href="/"
-            className="font-display text-lg md:text-xl tracking-[0.35em] text-[#f8f6f2] uppercase no-underline gold-glow"
+            className="flex items-center gap-2.5 font-display text-lg md:text-xl tracking-[0.35em] text-[#f8f6f2] uppercase no-underline gold-glow"
           >
+            <LogoMark className="h-6 w-auto opacity-90" />
             Exiles
           </a>
 
@@ -302,7 +304,8 @@ export default function ShippingPolicy() {
 
         {/* FOOTER */}
         <footer className="border-t border-[#161616] px-6 md:px-12 py-8 flex flex-col sm:flex-row justify-between items-center gap-3 font-body">
-          <span className="font-display text-base tracking-[0.4em] text-[#5e564b] uppercase">
+          <span className="flex items-center gap-2 font-display text-base tracking-[0.4em] text-[#5e564b] uppercase">
+            <LogoMark className="h-5 w-auto opacity-50" />
             Exiles
           </span>
 
