@@ -358,7 +358,7 @@ export default function LandingPage() {
 
       {/* SHOP BY CATEGORY */}
       <div id="products" className="max-w-[1400px] mx-auto px-4 sm:px-8 pt-16 pb-8">
-        <p className="text-[10px] tracking-[0.4em] uppercase text-zinc-500 mb-6">
+        <p className="text-[10px] tracking-[0.4em] uppercase text-amber-700 font-medium mb-6">
           Shop by Category
         </p>
 
@@ -593,7 +593,7 @@ export default function LandingPage() {
 
       <section className="w-full flex justify-center px-4 py-6">
         <div className="max-w-2xl rounded-2xl glass p-5 text-center">
-          <p className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-500">
+          <p className="text-sm font-medium uppercase tracking-[0.2em] text-amber-700">
             Pre-Drop Notice
           </p>
 
@@ -620,7 +620,7 @@ export default function LandingPage() {
               </p>
             </div>
             <div>
-              <p className="text-[10px] tracking-[0.3em] uppercase text-zinc-500 mb-4">Shop</p>
+              <p className="text-[10px] tracking-[0.3em] uppercase text-amber-700 font-medium mb-4">Shop</p>
               <ul className="space-y-2.5 text-xs text-zinc-500">
                 <li onClick={() => setActiveFilter("NEW")} className="hover:text-zinc-900 cursor-pointer transition-colors">Latest drop</li>
                 <li onClick={() => setActiveFilter("Hoodies")} className="hover:text-zinc-900 cursor-pointer transition-colors">Hoodies</li>
@@ -628,7 +628,7 @@ export default function LandingPage() {
               </ul>
             </div>
             <div>
-              <p className="text-[10px] tracking-[0.3em] uppercase text-zinc-500 mb-4">Support</p>
+              <p className="text-[10px] tracking-[0.3em] uppercase text-amber-700 font-medium mb-4">Support</p>
               <ul className="space-y-2.5 text-xs text-zinc-500">
                 <li><Link href="/shipping_policy" className="hover:text-zinc-900 cursor-pointer transition-colors">Shipping</Link></li>
                 <li className="hover:text-zinc-900 cursor-pointer transition-colors">Contact</li>
@@ -636,7 +636,7 @@ export default function LandingPage() {
               </ul>
             </div>
             <div className="col-span-2 md:col-span-1">
-              <p className="text-[10px] tracking-[0.3em] uppercase text-zinc-500 mb-4">Stay Updated</p>
+              <p className="text-[10px] tracking-[0.3em] uppercase text-amber-700 font-medium mb-4">Stay Updated</p>
               <p className="text-xs text-zinc-500 mb-4 leading-relaxed">Get early access to drops.</p>
               <form onSubmit={handleNewsletterSubmit} className="flex glass-input rounded-xl overflow-hidden">
                 <input

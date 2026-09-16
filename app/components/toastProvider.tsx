@@ -18,9 +18,9 @@ type ToastContextType = {
 const ToastContext = createContext<ToastContextType | null>(null);
 
 const ICONS: Record<ToastType, React.ReactNode> = {
-  success: <CheckCircle2 size={16} className="text-emerald-400 flex-shrink-0" />,
-  error: <XCircle size={16} className="text-red-400 flex-shrink-0" />,
-  info: <Info size={16} className="text-sky-400 flex-shrink-0" />,
+  success: <CheckCircle2 size={16} className="text-emerald-600 flex-shrink-0" />,
+  error: <XCircle size={16} className="text-red-600 flex-shrink-0" />,
+  info: <Info size={16} className="text-sky-600 flex-shrink-0" />,
 };
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
@@ -41,7 +41,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         {toasts.map((toast) => (
           <div
             key={toast.id}
-            className="glass-strong animate-toast-in pointer-events-auto flex items-center gap-2.5 px-4 py-3 rounded-2xl shadow-2xl shadow-black/40 text-xs sm:text-sm text-white max-w-sm w-fit"
+            className="glass-strong animate-toast-in pointer-events-auto flex items-center gap-2.5 px-4 py-3 rounded-2xl shadow-2xl shadow-zinc-900/20 text-xs sm:text-sm text-zinc-900 max-w-sm w-fit"
           >
             {ICONS[toast.type]}
             <span className="tracking-wide">{toast.message}</span>
