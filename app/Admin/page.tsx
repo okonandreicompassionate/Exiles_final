@@ -2,26 +2,42 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "../../lib/supabase";
-import { Plus, Trash2, Upload, CheckCircle } from "lucide-react";
-const ADMIN_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_PASSWORD ?? "";
+import { supabase, isSupabaseConfigured } from "../../lib/supabase";
+import { Plus, Trash2, CheckCircle, LogOut, ShieldCheck, UserPlus, X } from "lucide-react";
+import { useToast } from "../components/toastProvider";
+import { Logo } from "../components/Logo";
 
 type Category = { id: string; name: string; slug: string };
-
 type SizeRow = { size: string; stock: number };
+type AdminRole = "god" | "admin";
+type AdminUser = { id: string; email: string; role: AdminRole; created_at: string };
 
 const ALL_SIZES = ["XS", "S", "M", "L", "XL", "XXL"];
 
-const inputClass = "w-full bg-zinc-900 border border-zinc-800 text-white text-sm px-4 py-3 rounded-xl outline-none focus:border-zinc-600 transition-colors placeholder-zinc-600";
+const inputClass = "w-full glass-input text-zinc-900 text-sm px-4 py-3 rounded-xl outline-none transition-colors placeholder-zinc-400";
 
 export default function AdminPage() {
   const router = useRouter();
+  const { showToast } = useToast();
 
+  const [checkingSession, setCheckingSession] = useState(true);
   const [authed, setAuthed] = useState(false);
-  const [password, setPassword] = useState("");
+  const [role, setRole] = useState<AdminRole | null>(null);
+  const [myEmail, setMyEmail] = useState("");
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [loginLoading, setLoginLoading] = useState(false);
+
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+
+  const [showAdmins, setShowAdmins] = useState(false);
+  const [admins, setAdmins] = useState<AdminUser[]>([]);
+  const [adminsLoading, setAdminsLoading] = useState(false);
+  const [newAdminEmail, setNewAdminEmail] = useState("");
+  const [newAdminPassword, setNewAdminPassword] = useState("");
+  const [addingAdmin, setAddingAdmin] = useState(false);
 
   const [form, setForm] = useState({
     name: "",
@@ -42,22 +58,166 @@ export default function AdminPage() {
 
   const [images, setImages] = useState<string[]>(["", "", ""]);
 
+  // ── SESSION BOOTSTRAP ──
+  useEffect(() => {
+    async function bootstrap() {
+      if (!isSupabaseConfigured || !supabase) {
+        setCheckingSession(false);
+        return;
+      }
+
+      const { data: sessionData } = await supabase.auth.getSession();
+      const user = sessionData.session?.user;
+
+      if (!user) {
+        setCheckingSession(false);
+        return;
+      }
+
+      const { data: adminRow } = await supabase
+        .from("admins")
+        .select("role, email")
+        .eq("id", user.id)
+        .single();
+
+      if (adminRow) {
+        setAuthed(true);
+        setRole(adminRow.role);
+        setMyEmail(adminRow.email);
+      } else {
+        await supabase.auth.signOut();
+      }
+
+      setCheckingSession(false);
+    }
+
+    bootstrap();
+  }, []);
+
   useEffect(() => {
     if (authed) fetchCategories();
   }, [authed]);
 
   async function fetchCategories() {
     if (!supabase) return;
-
     const { data } = await supabase.from("categories").select("id, name, slug");
     setCategories(data ?? []);
   }
 
-  function handleLogin() {
-    if (password === ADMIN_PASSWORD) {
-      setAuthed(true);
-    } else {
-      alert("Wrong password!");
+  async function handleLogin() {
+    if (!supabase) {
+      showToast("Supabase is not configured. Add your environment variables first.", "error");
+      return;
+    }
+    if (!loginEmail || !loginPassword) {
+      showToast("Enter email and password", "error");
+      return;
+    }
+
+    setLoginLoading(true);
+
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: loginEmail,
+      password: loginPassword,
+    });
+
+    if (error || !data.user) {
+      showToast(error?.message ?? "Login failed", "error");
+      setLoginLoading(false);
+      return;
+    }
+
+    const { data: adminRow } = await supabase
+      .from("admins")
+      .select("role, email")
+      .eq("id", data.user.id)
+      .single();
+
+    if (!adminRow) {
+      await supabase.auth.signOut();
+      showToast("This account is not an admin", "error");
+      setLoginLoading(false);
+      return;
+    }
+
+    setAuthed(true);
+    setRole(adminRow.role);
+    setMyEmail(adminRow.email);
+    setLoginPassword("");
+    setLoginLoading(false);
+  }
+
+  async function handleLogout() {
+    if (supabase) await supabase.auth.signOut();
+    setAuthed(false);
+    setRole(null);
+    router.push("/Admin");
+  }
+
+  async function authHeader(): Promise<Record<string, string>> {
+    if (!supabase) return {};
+    const { data } = await supabase.auth.getSession();
+    const token = data.session?.access_token;
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  }
+
+  async function fetchAdmins() {
+    setAdminsLoading(true);
+    try {
+      const res = await fetch("/api/admin/list-admins", { headers: await authHeader() });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error);
+      setAdmins(json.admins ?? []);
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : "Failed to load admins", "error");
+    }
+    setAdminsLoading(false);
+  }
+
+  function toggleAdminsPanel() {
+    const next = !showAdmins;
+    setShowAdmins(next);
+    if (next) fetchAdmins();
+  }
+
+  async function handleAddAdmin() {
+    if (!newAdminEmail || !newAdminPassword) {
+      showToast("Enter email and password for the new admin", "error");
+      return;
+    }
+    setAddingAdmin(true);
+    try {
+      const res = await fetch("/api/admin/create-admin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(await authHeader()) },
+        body: JSON.stringify({ email: newAdminEmail, password: newAdminPassword }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error);
+      showToast(`Admin added: ${newAdminEmail}`, "success");
+      setNewAdminEmail("");
+      setNewAdminPassword("");
+      fetchAdmins();
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : "Failed to add admin", "error");
+    }
+    setAddingAdmin(false);
+  }
+
+  async function handleRemoveAdmin(id: string, email: string) {
+    if (!confirm(`Remove admin access for ${email}?`)) return;
+    try {
+      const res = await fetch("/api/admin/remove-admin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(await authHeader()) },
+        body: JSON.stringify({ id }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error);
+      showToast(`Removed ${email}`, "info");
+      fetchAdmins();
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : "Failed to remove admin", "error");
     }
   }
 
@@ -102,17 +262,17 @@ export default function AdminPage() {
 
   async function handleSubmit() {
     if (!supabase) {
-      alert("Supabase is not configured. Add your environment variables first.");
+      showToast("Supabase is not configured. Add your environment variables first.", "error");
       return;
     }
 
     if (!form.name || !form.price || !form.image_url || !form.category_id) {
-      alert("Fill in all required fields!");
+      showToast("Fill in all required fields!", "error");
       return;
     }
 
     if (sizes.length === 0) {
-      alert("Add at least one size!");
+      showToast("Add at least one size!", "error");
       return;
     }
 
@@ -135,7 +295,7 @@ export default function AdminPage() {
         .single();
 
       if (productError || !product) {
-        alert("Failed to add product: " + productError?.message);
+        showToast("Failed to add product: " + productError?.message, "error");
         setLoading(false);
         return;
       }
@@ -151,7 +311,7 @@ export default function AdminPage() {
         );
 
       if (variantError) {
-        alert("Failed to add variants: " + variantError.message);
+        showToast("Failed to add variants: " + variantError.message, "error");
         setLoading(false);
         return;
       }
@@ -172,13 +332,14 @@ export default function AdminPage() {
           );
 
         if (imageError) {
-          alert("Failed to add images: " + imageError.message);
+          showToast("Failed to add images: " + imageError.message, "error");
           setLoading(false);
           return;
         }
       }
 
       setSuccess(true);
+      showToast("Product added to shop", "success");
       setForm({
         name: "",
         description: "",
@@ -199,34 +360,56 @@ export default function AdminPage() {
 
     } catch (err) {
       console.error(err);
-      alert("Something went wrong!");
+      showToast("Something went wrong!", "error");
     }
 
     setLoading(false);
   }
 
+  if (checkingSession) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="w-5 h-5 rounded-full border-2 border-zinc-900/15 border-t-zinc-900 animate-spin" />
+      </div>
+    );
+  }
+
   if (!authed) {
     return (
-      <div className="min-h-screen bg-zinc-950 text-white flex items-center justify-center px-4">
+      <div className="min-h-screen bg-white text-zinc-900 flex items-center justify-center px-4">
         <div className="w-full max-w-sm space-y-6">
-          <div className="text-center">
-            <h1 className="font-bold tracking-[0.4em] text-sm uppercase mb-2">EXILES</h1>
-            <p className="text-zinc-600 text-xs tracking-widest uppercase">Admin Access</p>
+          <div className="text-center flex flex-col items-center gap-3">
+            <Logo showText={false} markClassName="h-10" />
+            <div>
+              <h1 className="font-bold tracking-[0.4em] text-sm uppercase mb-1">EX1LES</h1>
+              <p className="text-zinc-400 text-xs tracking-widest uppercase">Admin Access</p>
+            </div>
           </div>
           <div className="space-y-3">
             <input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              type="email"
+              placeholder="Email"
+              value={loginEmail}
+              onChange={(e) => setLoginEmail(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleLogin()}
               className={inputClass}
+              autoComplete="username"
+            />
+            <input
+              type="password"
+              placeholder="Password"
+              value={loginPassword}
+              onChange={(e) => setLoginPassword(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleLogin()}
+              className={inputClass}
+              autoComplete="current-password"
             />
             <button
               onClick={handleLogin}
-              className="w-full py-3.5 bg-white text-zinc-950 text-xs tracking-[0.25em] uppercase font-semibold rounded-xl hover:bg-zinc-100 transition-colors"
+              disabled={loginLoading}
+              className="w-full py-3.5 bg-zinc-900 text-white text-xs tracking-[0.25em] uppercase font-semibold rounded-xl hover:bg-zinc-700 transition-colors disabled:opacity-50"
             >
-              Enter
+              {loginLoading ? "Signing in..." : "Sign In"}
             </button>
           </div>
         </div>
@@ -235,32 +418,114 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white">
+    <div className="min-h-screen bg-white text-zinc-900">
 
       {/* NAV */}
-      <nav className="sticky top-0 z-50 bg-zinc-950/80 backdrop-blur-xl border-b border-zinc-800/60">
-        <div className="max-w-4xl mx-auto px-4 sm:px-8 py-4 flex items-center justify-between">
-          <h1 className="font-bold tracking-[0.4em] text-sm uppercase">EXILES Admin</h1>
-          <button
-            onClick={() => router.push("/")}
-            className="text-xs tracking-widest uppercase text-zinc-500 hover:text-white transition-colors"
-          >
-            View Shop
-          </button>
-
-          <button onClick={() => router.push("/Admin/edit")} className="text-xs tracking-widest uppercase text-zinc-500 hover:text-white transition-colors">
-  Edit Products
-</button>
+      <nav className="sticky top-0 z-50 glass-nav">
+        <div className="max-w-4xl mx-auto px-4 sm:px-8 py-4 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <Logo showText={false} markClassName="h-7" />
+            <h1 className="font-bold tracking-[0.4em] text-sm uppercase hidden sm:block">Admin</h1>
+          </div>
+          <div className="flex items-center gap-4 sm:gap-6">
+            {role === "god" && (
+              <button
+                onClick={toggleAdminsPanel}
+                className="flex items-center gap-1.5 text-xs tracking-widest uppercase text-zinc-500 hover:text-zinc-900 transition-colors"
+              >
+                <ShieldCheck size={14} />
+                <span className="hidden sm:inline">Admins</span>
+              </button>
+            )}
+            <button
+              onClick={() => router.push("/Admin/edit")}
+              className="text-xs tracking-widest uppercase text-zinc-500 hover:text-zinc-900 transition-colors"
+            >
+              Edit Products
+            </button>
+            <button
+              onClick={() => router.push("/shop")}
+              className="text-xs tracking-widest uppercase text-zinc-500 hover:text-zinc-900 transition-colors hidden sm:block"
+            >
+              View Shop
+            </button>
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-1.5 text-xs tracking-widest uppercase text-zinc-500 hover:text-red-500 transition-colors"
+              title={myEmail}
+            >
+              <LogOut size={14} />
+            </button>
+          </div>
         </div>
       </nav>
 
       <div className="max-w-4xl mx-auto px-4 sm:px-8 py-10 pb-24">
 
+        {/* ADMIN MANAGEMENT — god only */}
+        {role === "god" && showAdmins && (
+          <div className="glass rounded-2xl p-5 sm:p-6 mb-8 space-y-5">
+            <div className="flex items-center justify-between">
+              <p className="text-[10px] tracking-[0.4em] uppercase text-amber-700 font-medium">
+                Manage Admins
+              </p>
+              <button onClick={() => setShowAdmins(false)} className="text-zinc-400 hover:text-zinc-900">
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-2">
+              <input
+                type="email"
+                placeholder="New admin email"
+                value={newAdminEmail}
+                onChange={(e) => setNewAdminEmail(e.target.value)}
+                className={inputClass}
+              />
+              <input
+                type="password"
+                placeholder="Temporary password (min 8 chars)"
+                value={newAdminPassword}
+                onChange={(e) => setNewAdminPassword(e.target.value)}
+                className={inputClass}
+              />
+              <button
+                onClick={handleAddAdmin}
+                disabled={addingAdmin}
+                className="flex items-center justify-center gap-1.5 px-5 py-3 bg-zinc-900 text-white text-xs tracking-widest uppercase font-semibold rounded-xl hover:bg-zinc-700 transition-colors disabled:opacity-50 flex-shrink-0"
+              >
+                <UserPlus size={14} />
+                Add
+              </button>
+            </div>
+
+            <div className="space-y-2">
+              {adminsLoading && <p className="text-xs text-zinc-400">Loading...</p>}
+              {!adminsLoading && admins.map((a) => (
+                <div key={a.id} className="flex items-center justify-between px-4 py-3 rounded-xl bg-zinc-900/[0.03]">
+                  <div>
+                    <p className="text-sm text-zinc-900">{a.email}</p>
+                    <p className="text-[10px] uppercase tracking-widest text-zinc-400">{a.role}</p>
+                  </div>
+                  {a.role !== "god" && (
+                    <button
+                      onClick={() => handleRemoveAdmin(a.id, a.email)}
+                      className="text-zinc-400 hover:text-red-500 transition-colors"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* SUCCESS BANNER */}
         {success && (
-          <div className="flex items-center gap-3 bg-green-500/10 border border-green-500/20 text-green-400 px-4 py-3 rounded-xl mb-6 text-sm">
+          <div className="flex items-center gap-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 px-4 py-3 rounded-xl mb-6 text-sm">
             <CheckCircle size={16} />
-            Product added successfully! It's live on your shop now.
+            Product added successfully! It&apos;s live on your shop now.
           </div>
         )}
 
@@ -271,7 +536,7 @@ export default function AdminPage() {
 
             {/* PRODUCT INFO */}
             <div>
-              <p className="text-[10px] tracking-[0.4em] uppercase text-zinc-500 mb-4">
+              <p className="text-[10px] tracking-[0.4em] uppercase text-amber-700 font-medium mb-4">
                 Product Info
               </p>
               <div className="space-y-3">
@@ -296,7 +561,7 @@ export default function AdminPage() {
                 <div className="grid grid-cols-2 gap-3">
                   {/* PRICE */}
                   <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 text-sm">₦</span>
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 text-sm">₦</span>
                     <input
                       type="number"
                       name="price"
@@ -324,13 +589,13 @@ export default function AdminPage() {
                 </div>
 
                 {/* FEATURED TOGGLE */}
-                <label className="flex items-center gap-3 px-4 py-3 bg-zinc-900 border border-zinc-800 rounded-xl cursor-pointer hover:border-zinc-700 transition-colors">
-                  <div className={`w-10 h-5 rounded-full transition-colors relative ${form.is_featured ? "bg-white" : "bg-zinc-700"}`}>
-                    <div className={`absolute top-0.5 w-4 h-4 bg-zinc-950 rounded-full transition-all ${form.is_featured ? "left-5" : "left-0.5"}`} />
+                <label className="flex items-center gap-3 px-4 py-3 glass rounded-xl cursor-pointer hover:bg-zinc-900/5 transition-colors">
+                  <div className={`w-10 h-5 rounded-full transition-colors relative ${form.is_featured ? "bg-zinc-900" : "bg-zinc-300"}`}>
+                    <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all ${form.is_featured ? "left-5" : "left-0.5"}`} />
                   </div>
                   <div>
-                    <p className="text-xs text-white">Mark as New Arrival</p>
-                    <p className="text-[10px] text-zinc-600">Shows "New" badge on product card</p>
+                    <p className="text-xs text-zinc-900">Mark as New Arrival</p>
+                    <p className="text-[10px] text-zinc-400">Shows &quot;New&quot; badge on product card</p>
                   </div>
                   <input
                     type="checkbox"
@@ -345,7 +610,7 @@ export default function AdminPage() {
 
             {/* SIZES + STOCK */}
             <div>
-              <p className="text-[10px] tracking-[0.4em] uppercase text-zinc-500 mb-4">
+              <p className="text-[10px] tracking-[0.4em] uppercase text-amber-700 font-medium mb-4">
                 Sizes & Stock
               </p>
 
@@ -357,10 +622,10 @@ export default function AdminPage() {
                     <button
                       key={size}
                       onClick={() => toggleSize(size)}
-                      className={`w-12 h-12 rounded-xl text-xs font-medium transition-all border ${
+                      className={`w-12 h-12 rounded-xl text-xs font-medium transition-all ${
                         active
-                          ? "bg-white text-zinc-950 border-white"
-                          : "bg-zinc-900 text-zinc-500 border-zinc-800 hover:border-zinc-600"
+                          ? "bg-zinc-900 text-white"
+                          : "glass text-zinc-500 hover:text-zinc-900"
                       }`}
                     >
                       {size}
@@ -373,7 +638,7 @@ export default function AdminPage() {
               <div className="space-y-2">
                 {sizes.map((s, idx) => (
                   <div key={s.size} className="flex items-center gap-3">
-                    <span className="text-xs text-zinc-400 w-8 text-center font-medium">{s.size}</span>
+                    <span className="text-xs text-zinc-500 w-8 text-center font-medium">{s.size}</span>
                     <input
                       type="number"
                       min={0}
@@ -382,7 +647,7 @@ export default function AdminPage() {
                       className={`${inputClass} flex-1`}
                       placeholder="Stock quantity"
                     />
-                    <span className="text-[10px] text-zinc-600 w-10">
+                    <span className="text-[10px] text-zinc-400 w-10">
                       {s.stock === 0 ? "OOS" : "in stock"}
                     </span>
                   </div>
@@ -397,7 +662,7 @@ export default function AdminPage() {
 
             {/* MAIN IMAGE */}
             <div>
-              <p className="text-[10px] tracking-[0.4em] uppercase text-zinc-500 mb-4">
+              <p className="text-[10px] tracking-[0.4em] uppercase text-amber-700 font-medium mb-4">
                 Main Image (Shop Grid)
               </p>
               <input
@@ -409,7 +674,7 @@ export default function AdminPage() {
                 className={inputClass}
               />
               {form.image_url && (
-                <div className="mt-3 aspect-[3/4] rounded-xl overflow-hidden bg-zinc-900 border border-zinc-800">
+                <div className="mt-3 aspect-[3/4] rounded-xl overflow-hidden glass">
                   <img
                     src={form.image_url}
                     alt="Preview"
@@ -425,12 +690,12 @@ export default function AdminPage() {
             {/* EXTRA IMAGES */}
             <div>
               <div className="flex items-center justify-between mb-4">
-                <p className="text-[10px] tracking-[0.4em] uppercase text-zinc-500">
+                <p className="text-[10px] tracking-[0.4em] uppercase text-amber-700 font-medium">
                   Gallery Images (Product Page)
                 </p>
                 <button
                   onClick={addImageSlot}
-                  className="flex items-center gap-1 text-[10px] tracking-widest uppercase text-zinc-500 hover:text-white transition-colors"
+                  className="flex items-center gap-1 text-[10px] tracking-widest uppercase text-zinc-500 hover:text-zinc-900 transition-colors"
                 >
                   <Plus size={11} />
                   Add
@@ -449,7 +714,7 @@ export default function AdminPage() {
                         className={inputClass}
                       />
                       {url && (
-                        <div className="h-24 rounded-xl overflow-hidden bg-zinc-900 border border-zinc-800">
+                        <div className="h-24 rounded-xl overflow-hidden glass">
                           <img
                             src={url}
                             alt={`Preview ${idx + 1}`}
@@ -463,7 +728,7 @@ export default function AdminPage() {
                     </div>
                     <button
                       onClick={() => removeImageSlot(idx)}
-                      className="mt-3 text-zinc-700 hover:text-red-400 transition-colors"
+                      className="mt-3 text-zinc-300 hover:text-red-500 transition-colors"
                     >
                       <Trash2 size={14} />
                     </button>
@@ -472,9 +737,9 @@ export default function AdminPage() {
               </div>
 
               {/* IMGUR TIP */}
-              <div className="mt-4 px-4 py-3 bg-zinc-900/60 rounded-xl border border-zinc-800/40">
+              <div className="mt-4 px-4 py-3 glass rounded-xl">
                 <p className="text-[10px] text-zinc-500 leading-relaxed">
-                  💡 Upload photos at <span className="text-zinc-300">imgur.com</span> → right click image → Copy Image Address → paste above
+                  💡 Upload photos at <span className="text-zinc-700">imgur.com</span> → right click image → Copy Image Address → paste above
                 </p>
               </div>
             </div>
@@ -483,19 +748,19 @@ export default function AdminPage() {
         </div>
 
         {/* SUBMIT */}
-        <div className="mt-10 border-t border-zinc-800/60 pt-8">
+        <div className="mt-10 border-t border-zinc-900/10 pt-8">
           <button
             onClick={handleSubmit}
             disabled={loading}
             className={`w-full py-4 text-xs tracking-[0.3em] uppercase font-semibold rounded-xl transition-all duration-300 ${
               loading
-                ? "bg-zinc-800 text-zinc-500 cursor-not-allowed"
-                : "bg-white text-zinc-950 hover:bg-zinc-100 shadow-lg shadow-white/5"
+                ? "bg-zinc-200 text-zinc-400 cursor-not-allowed"
+                : "bg-zinc-900 text-white hover:bg-zinc-700 shadow-lg shadow-zinc-900/10"
             }`}
           >
             {loading ? "Adding Product..." : "Add Product to Shop"}
           </button>
-          <p className="text-zinc-700 text-[10px] tracking-wide text-center mt-3">
+          <p className="text-zinc-400 text-[10px] tracking-wide text-center mt-3">
             Product goes live instantly after adding
           </p>
         </div>

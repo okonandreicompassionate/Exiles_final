@@ -2,15 +2,15 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "../../../lib/supabase";
+import { supabase, isSupabaseConfigured } from "../../../lib/supabase";
 import { Trash2, Plus, CheckCircle, X, ChevronDown, ChevronUp } from "lucide-react";
-
-const ADMIN_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_PASSWORD ?? "";
+import { useToast } from "../../components/toastProvider";
+import { Logo } from "../../components/Logo";
 
 const ALL_SIZES = ["XS", "S", "M", "L", "XL", "XXL"];
 
 const inputClass =
-  "w-full bg-zinc-900 border border-zinc-800 text-white text-sm px-4 py-3 rounded-xl outline-none focus:border-zinc-600 transition-colors placeholder-zinc-600";
+  "w-full glass-input text-zinc-900 text-sm px-4 py-3 rounded-xl outline-none transition-colors placeholder-zinc-400";
 
 type Category = { id: string; name: string; slug: string };
 type Variant = { id?: string; size: string; stock: number };
@@ -30,9 +30,14 @@ type Product = {
 
 export default function EditProductsPage() {
   const router = useRouter();
+  const { showToast } = useToast();
 
+  const [checkingSession, setCheckingSession] = useState(true);
   const [authed, setAuthed] = useState(false);
-  const [password, setPassword] = useState("");
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [loginLoading, setLoginLoading] = useState(false);
+
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -41,9 +46,70 @@ export default function EditProductsPage() {
   const [saved, setSaved] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
 
-  function handleLogin() {
-    if (password === ADMIN_PASSWORD) setAuthed(true);
-    else alert("Wrong password!");
+  // ── SESSION BOOTSTRAP ──
+  useEffect(() => {
+    async function bootstrap() {
+      if (!isSupabaseConfigured || !supabase) {
+        setCheckingSession(false);
+        return;
+      }
+
+      const { data: sessionData } = await supabase.auth.getSession();
+      const user = sessionData.session?.user;
+
+      if (!user) {
+        setCheckingSession(false);
+        return;
+      }
+
+      const { data: adminRow } = await supabase.from("admins").select("id").eq("id", user.id).single();
+
+      if (adminRow) {
+        setAuthed(true);
+      } else {
+        await supabase.auth.signOut();
+      }
+
+      setCheckingSession(false);
+    }
+
+    bootstrap();
+  }, []);
+
+  async function handleLogin() {
+    if (!supabase) {
+      showToast("Supabase is not configured. Add your environment variables first.", "error");
+      return;
+    }
+    if (!loginEmail || !loginPassword) {
+      showToast("Enter email and password", "error");
+      return;
+    }
+
+    setLoginLoading(true);
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: loginEmail,
+      password: loginPassword,
+    });
+
+    if (error || !data.user) {
+      showToast(error?.message ?? "Login failed", "error");
+      setLoginLoading(false);
+      return;
+    }
+
+    const { data: adminRow } = await supabase.from("admins").select("id").eq("id", data.user.id).single();
+
+    if (!adminRow) {
+      await supabase.auth.signOut();
+      showToast("This account is not an admin", "error");
+      setLoginLoading(false);
+      return;
+    }
+
+    setAuthed(true);
+    setLoginPassword("");
+    setLoginLoading(false);
   }
 
   useEffect(() => {
@@ -72,7 +138,7 @@ export default function EditProductsPage() {
       `)
       .order("created_at", { ascending: false });
 
-    if (error) { alert("Failed to load products: " + error.message); return; }
+    if (error) { showToast("Failed to load products: " + error.message, "error"); return; }
 
     const parsed: Product[] = (data ?? []).map((p: any) => ({
       ...p,
@@ -137,7 +203,7 @@ export default function EditProductsPage() {
 
   async function handleSave(id: string) {
     if (!supabase) {
-      alert("Supabase is not configured. Add your environment variables first.");
+      showToast("Supabase is not configured. Add your environment variables first.", "error");
       return;
     }
 
@@ -205,11 +271,12 @@ export default function EditProductsPage() {
       }
 
       setSaved(id);
+      showToast("Changes saved", "success");
       setTimeout(() => setSaved(null), 3000);
       await fetchProducts();
 
     } catch (err: any) {
-      alert("Save failed: " + err.message);
+      showToast("Save failed: " + err.message, "error");
     }
 
     setSaving(null);
@@ -217,7 +284,7 @@ export default function EditProductsPage() {
 
   async function handleDelete(id: string) {
     if (!supabase) {
-      alert("Supabase is not configured. Add your environment variables first.");
+      showToast("Supabase is not configured. Add your environment variables first.", "error");
       return;
     }
 
@@ -227,32 +294,55 @@ export default function EditProductsPage() {
     await supabase.from("product_images").delete().eq("product_id", id);
     await supabase.from("products").delete().eq("id", id);
     setDeleting(null);
+    showToast("Product deleted", "info");
     await fetchProducts();
+  }
+
+  if (checkingSession) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="w-5 h-5 rounded-full border-2 border-zinc-900/15 border-t-zinc-900 animate-spin" />
+      </div>
+    );
   }
 
   // ── LOGIN ──
   if (!authed) {
     return (
-      <div className="min-h-screen bg-zinc-950 text-white flex items-center justify-center px-4">
+      <div className="min-h-screen bg-white text-zinc-900 flex items-center justify-center px-4">
         <div className="w-full max-w-sm space-y-6">
-          <div className="text-center">
-            <h1 className="font-bold tracking-[0.4em] text-sm uppercase mb-2">EXILES</h1>
-            <p className="text-zinc-600 text-xs tracking-widest uppercase">Admin Access</p>
+          <div className="text-center flex flex-col items-center gap-3">
+            <Logo showText={false} markClassName="h-10" />
+            <div>
+              <h1 className="font-bold tracking-[0.4em] text-sm uppercase mb-1">EX1LES</h1>
+              <p className="text-zinc-400 text-xs tracking-widest uppercase">Admin Access</p>
+            </div>
           </div>
           <div className="space-y-3">
             <input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              type="email"
+              placeholder="Email"
+              value={loginEmail}
+              onChange={(e) => setLoginEmail(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleLogin()}
               className={inputClass}
+              autoComplete="username"
+            />
+            <input
+              type="password"
+              placeholder="Password"
+              value={loginPassword}
+              onChange={(e) => setLoginPassword(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleLogin()}
+              className={inputClass}
+              autoComplete="current-password"
             />
             <button
               onClick={handleLogin}
-              className="w-full py-3.5 bg-white text-zinc-950 text-xs tracking-[0.25em] uppercase font-semibold rounded-xl hover:bg-zinc-100 transition-colors"
+              disabled={loginLoading}
+              className="w-full py-3.5 bg-zinc-900 text-white text-xs tracking-[0.25em] uppercase font-semibold rounded-xl hover:bg-zinc-700 transition-colors disabled:opacity-50"
             >
-              Enter
+              {loginLoading ? "Signing in..." : "Sign In"}
             </button>
           </div>
         </div>
@@ -262,26 +352,26 @@ export default function EditProductsPage() {
 
   // ── MAIN ──
   return (
-    <div className="min-h-screen bg-zinc-950 text-white">
+    <div className="min-h-screen bg-white text-zinc-900">
 
       {/* NAV */}
-      <nav className="sticky top-0 z-50 bg-zinc-950/80 backdrop-blur-xl border-b border-zinc-800/60">
+      <nav className="sticky top-0 z-50 glass-nav">
         <div className="max-w-4xl mx-auto px-4 sm:px-8 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-6">
-            <h1 className="font-bold tracking-[0.4em] text-sm uppercase">EXILES Admin</h1>
-            <span className="text-zinc-700 text-xs">|</span>
-            <span className="text-zinc-400 text-xs tracking-widest uppercase">Edit Products</span>
+          <div className="flex items-center gap-3 sm:gap-6">
+            <Logo showText={false} markClassName="h-7" />
+            <span className="text-zinc-300 text-xs hidden sm:inline">|</span>
+            <span className="text-zinc-500 text-xs tracking-widest uppercase hidden sm:inline">Edit Products</span>
           </div>
           <div className="flex items-center gap-4">
             <button
-              onClick={() => router.push("/admin")}
-              className="text-xs tracking-widest uppercase text-zinc-500 hover:text-white transition-colors"
+              onClick={() => router.push("/Admin")}
+              className="text-xs tracking-widest uppercase text-zinc-500 hover:text-zinc-900 transition-colors"
             >
               + Add New
             </button>
             <button
-              onClick={() => router.push("/")}
-              className="text-xs tracking-widest uppercase text-zinc-500 hover:text-white transition-colors"
+              onClick={() => router.push("/shop")}
+              className="text-xs tracking-widest uppercase text-zinc-500 hover:text-zinc-900 transition-colors"
             >
               View Shop
             </button>
@@ -291,7 +381,7 @@ export default function EditProductsPage() {
 
       <div className="max-w-4xl mx-auto px-4 sm:px-8 py-10 pb-24 space-y-3">
 
-        <p className="text-[10px] tracking-[0.4em] uppercase text-zinc-600 mb-6">
+        <p className="text-[10px] tracking-[0.4em] uppercase text-zinc-400 mb-6">
           {products.length} product{products.length !== 1 ? "s" : ""} — click to expand and edit
         </p>
 
@@ -303,14 +393,14 @@ export default function EditProductsPage() {
           return (
             <div
               key={product.id}
-              className="border border-zinc-800/60 rounded-2xl overflow-hidden bg-zinc-900/30"
+              className="glass rounded-2xl overflow-hidden"
             >
               {/* ROW HEADER */}
               <div
-                className="flex items-center gap-4 px-5 py-4 cursor-pointer hover:bg-zinc-800/20 transition-colors"
+                className="flex items-center gap-4 px-5 py-4 cursor-pointer hover:bg-zinc-900/[0.03] transition-colors"
                 onClick={() => toggleExpand(product.id)}
               >
-                <div className="w-12 h-12 rounded-lg overflow-hidden bg-zinc-800 flex-shrink-0">
+                <div className="w-12 h-12 rounded-lg overflow-hidden bg-zinc-100 flex-shrink-0">
                   {product.image_url && (
                     <img
                       src={product.image_url}
@@ -321,12 +411,12 @@ export default function EditProductsPage() {
                 </div>
 
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-white font-medium truncate">{product.name}</p>
+                  <p className="text-sm text-zinc-900 font-medium truncate">{product.name}</p>
                   <p className="text-xs text-zinc-500 mt-0.5">
                     ₦{(product.price / 100).toLocaleString()} &nbsp;·&nbsp;{" "}
                     {product.variants.length} size{product.variants.length !== 1 ? "s" : ""}
                     {product.is_featured && (
-                      <span className="ml-2 text-[10px] bg-white/10 text-zinc-300 px-2 py-0.5 rounded-full">
+                      <span className="ml-2 text-[10px] bg-zinc-900/5 text-zinc-600 px-2 py-0.5 rounded-full">
                         New Arrival
                       </span>
                     )}
@@ -335,35 +425,35 @@ export default function EditProductsPage() {
 
                 <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                   {saved === product.id && (
-                    <span className="flex items-center gap-1 text-green-400 text-[10px]">
+                    <span className="flex items-center gap-1 text-emerald-600 text-[10px]">
                       <CheckCircle size={12} /> Saved
                     </span>
                   )}
                   <button
                     onClick={() => handleDelete(product.id)}
                     disabled={deleting === product.id}
-                    className="p-2 text-zinc-700 hover:text-red-400 transition-colors"
+                    className="p-2 text-zinc-300 hover:text-red-500 transition-colors"
                   >
                     <Trash2 size={14} />
                   </button>
                 </div>
 
                 {isOpen ? (
-                  <ChevronUp size={16} className="text-zinc-600 flex-shrink-0" />
+                  <ChevronUp size={16} className="text-zinc-400 flex-shrink-0" />
                 ) : (
-                  <ChevronDown size={16} className="text-zinc-600 flex-shrink-0" />
+                  <ChevronDown size={16} className="text-zinc-400 flex-shrink-0" />
                 )}
               </div>
 
               {/* EXPANDED EDIT FORM */}
               {isOpen && (
-                <div className="border-t border-zinc-800/60 px-5 py-6 space-y-6">
+                <div className="border-t border-zinc-900/10 px-5 py-6 space-y-6">
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
                     {/* LEFT */}
                     <div className="space-y-4">
                       <div>
-                        <p className="text-[10px] tracking-[0.4em] uppercase text-zinc-500 mb-3">
+                        <p className="text-[10px] tracking-[0.4em] uppercase text-amber-700 font-medium mb-3">
                           Product Info
                         </p>
                         <div className="space-y-3">
@@ -383,7 +473,7 @@ export default function EditProductsPage() {
                           />
                           <div className="grid grid-cols-2 gap-3">
                             <div className="relative">
-                              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 text-sm">₦</span>
+                              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 text-sm">₦</span>
                               <input
                                 type="number"
                                 placeholder="Price"
@@ -410,17 +500,17 @@ export default function EditProductsPage() {
                             </select>
                           </div>
 
-                          <label className="flex items-center gap-3 px-4 py-3 bg-zinc-900 border border-zinc-800 rounded-xl cursor-pointer hover:border-zinc-700 transition-colors">
+                          <label className="flex items-center gap-3 px-4 py-3 glass rounded-xl cursor-pointer hover:bg-zinc-900/5 transition-colors">
                             <div
-                              className={`w-10 h-5 rounded-full transition-colors relative ${ed.is_featured ? "bg-white" : "bg-zinc-700"}`}
+                              className={`w-10 h-5 rounded-full transition-colors relative ${ed.is_featured ? "bg-zinc-900" : "bg-zinc-300"}`}
                             >
                               <div
-                                className={`absolute top-0.5 w-4 h-4 bg-zinc-950 rounded-full transition-all ${ed.is_featured ? "left-5" : "left-0.5"}`}
+                                className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all ${ed.is_featured ? "left-5" : "left-0.5"}`}
                               />
                             </div>
                             <div>
-                              <p className="text-xs text-white">Mark as New Arrival</p>
-                              <p className="text-[10px] text-zinc-600">Shows "New" badge on product card</p>
+                              <p className="text-xs text-zinc-900">Mark as New Arrival</p>
+                              <p className="text-[10px] text-zinc-400">Shows &quot;New&quot; badge on product card</p>
                             </div>
                             <input
                               type="checkbox"
@@ -434,7 +524,7 @@ export default function EditProductsPage() {
 
                       {/* Sizes & Stock */}
                       <div>
-                        <p className="text-[10px] tracking-[0.4em] uppercase text-zinc-500 mb-3">
+                        <p className="text-[10px] tracking-[0.4em] uppercase text-amber-700 font-medium mb-3">
                           Sizes & Stock
                         </p>
                         <div className="flex gap-2 flex-wrap mb-3">
@@ -444,10 +534,10 @@ export default function EditProductsPage() {
                               <button
                                 key={size}
                                 onClick={() => toggleVariantSize(product.id, size)}
-                                className={`w-12 h-12 rounded-xl text-xs font-medium transition-all border ${
+                                className={`w-12 h-12 rounded-xl text-xs font-medium transition-all ${
                                   active
-                                    ? "bg-white text-zinc-950 border-white"
-                                    : "bg-zinc-900 text-zinc-500 border-zinc-800 hover:border-zinc-600"
+                                    ? "bg-zinc-900 text-white"
+                                    : "glass text-zinc-500 hover:text-zinc-900"
                                 }`}
                               >
                                 {size}
@@ -458,7 +548,7 @@ export default function EditProductsPage() {
                         <div className="space-y-2">
                           {ed.variants.map((v, idx) => (
                             <div key={v.size} className="flex items-center gap-3">
-                              <span className="text-xs text-zinc-400 w-8 text-center font-medium">{v.size}</span>
+                              <span className="text-xs text-zinc-500 w-8 text-center font-medium">{v.size}</span>
                               <input
                                 type="number"
                                 min={0}
@@ -469,7 +559,7 @@ export default function EditProductsPage() {
                                 className={`${inputClass} flex-1`}
                                 placeholder="Stock"
                               />
-                              <span className="text-[10px] text-zinc-600 w-10">
+                              <span className="text-[10px] text-zinc-400 w-10">
                                 {v.stock === 0 ? "OOS" : "in stock"}
                               </span>
                             </div>
@@ -481,7 +571,7 @@ export default function EditProductsPage() {
                     {/* RIGHT — Images */}
                     <div className="space-y-4">
                       <div>
-                        <p className="text-[10px] tracking-[0.4em] uppercase text-zinc-500 mb-3">
+                        <p className="text-[10px] tracking-[0.4em] uppercase text-amber-700 font-medium mb-3">
                           Main Image
                         </p>
                         <input
@@ -492,7 +582,7 @@ export default function EditProductsPage() {
                           className={inputClass}
                         />
                         {ed.image_url && (
-                          <div className="mt-3 h-40 rounded-xl overflow-hidden bg-zinc-900 border border-zinc-800">
+                          <div className="mt-3 h-40 rounded-xl overflow-hidden glass">
                             <img
                               src={ed.image_url}
                               alt="Preview"
@@ -504,12 +594,12 @@ export default function EditProductsPage() {
 
                       <div>
                         <div className="flex items-center justify-between mb-3">
-                          <p className="text-[10px] tracking-[0.4em] uppercase text-zinc-500">
+                          <p className="text-[10px] tracking-[0.4em] uppercase text-amber-700 font-medium">
                             Gallery Images
                           </p>
                           <button
                             onClick={() => addImageSlot(product.id)}
-                            className="flex items-center gap-1 text-[10px] tracking-widest uppercase text-zinc-500 hover:text-white transition-colors"
+                            className="flex items-center gap-1 text-[10px] tracking-widest uppercase text-zinc-500 hover:text-zinc-900 transition-colors"
                           >
                             <Plus size={11} /> Add
                           </button>
@@ -526,7 +616,7 @@ export default function EditProductsPage() {
                                   className={inputClass}
                                 />
                                 {img.image_url && (
-                                  <div className="h-20 rounded-xl overflow-hidden bg-zinc-900 border border-zinc-800">
+                                  <div className="h-20 rounded-xl overflow-hidden glass">
                                     <img
                                       src={img.image_url}
                                       alt=""
@@ -537,7 +627,7 @@ export default function EditProductsPage() {
                               </div>
                               <button
                                 onClick={() => removeImageSlot(product.id, idx)}
-                                className="mt-3 text-zinc-700 hover:text-red-400 transition-colors"
+                                className="mt-3 text-zinc-300 hover:text-red-500 transition-colors"
                               >
                                 <X size={14} />
                               </button>
@@ -545,9 +635,9 @@ export default function EditProductsPage() {
                           ))}
                         </div>
 
-                        <div className="mt-4 px-4 py-3 bg-zinc-900/60 rounded-xl border border-zinc-800/40">
+                        <div className="mt-4 px-4 py-3 glass rounded-xl">
                           <p className="text-[10px] text-zinc-500 leading-relaxed">
-                            💡 Upload at <span className="text-zinc-300">imgur.com</span> → right click → Copy Image Address → paste above
+                            💡 Upload at <span className="text-zinc-700">imgur.com</span> → right click → Copy Image Address → paste above
                           </p>
                         </div>
                       </div>
@@ -555,20 +645,20 @@ export default function EditProductsPage() {
                   </div>
 
                   {/* SAVE BUTTON */}
-                  <div className="pt-4 border-t border-zinc-800/60">
+                  <div className="pt-4 border-t border-zinc-900/10">
                     <button
                       onClick={() => handleSave(product.id)}
                       disabled={saving === product.id}
                       className={`w-full py-4 text-xs tracking-[0.3em] uppercase font-semibold rounded-xl transition-all duration-300 ${
                         saving === product.id
-                          ? "bg-zinc-800 text-zinc-500 cursor-not-allowed"
-                          : "bg-white text-zinc-950 hover:bg-zinc-100 shadow-lg shadow-white/5"
+                          ? "bg-zinc-200 text-zinc-400 cursor-not-allowed"
+                          : "bg-zinc-900 text-white hover:bg-zinc-700 shadow-lg shadow-zinc-900/10"
                       }`}
                     >
                       {saving === product.id ? "Saving..." : "Save Changes"}
                     </button>
                     {saved === product.id && (
-                      <p className="text-green-400 text-[10px] tracking-wide text-center mt-3 flex items-center justify-center gap-1">
+                      <p className="text-emerald-600 text-[10px] tracking-wide text-center mt-3 flex items-center justify-center gap-1">
                         <CheckCircle size={11} /> Changes saved — live on shop now
                       </p>
                     )}

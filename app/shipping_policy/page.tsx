@@ -42,7 +42,7 @@ export default function ShippingPolicy() {
   };
 
   return (
-    <div className="min-h-screen bg-[#050505] text-[#f8f6f2] font-sans">
+    <div className="min-h-screen bg-[#ffffff] text-[#18181b] font-sans">
       <style>{`
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=Montserrat:wght@200;300;400;500&display=swap');
 
@@ -73,7 +73,7 @@ export default function ShippingPolicy() {
   font-size: clamp(64px, 14vw, 180px);
   font-weight: 300;
   letter-spacing: 0.18em;
-  color: rgba(255,255,255,0.03);
+  color: rgba(24,24,27,0.035);
   white-space: nowrap;
   pointer-events: none;
   user-select: none;
@@ -89,8 +89,8 @@ export default function ShippingPolicy() {
   border: 1px solid rgba(212,175,115,0.12);
   background: linear-gradient(
     to bottom,
-    rgba(255,255,255,0.015),
-    rgba(255,255,255,0.005)
+    rgba(24,24,27,0.025),
+    rgba(24,24,27,0.01)
   );
   backdrop-filter: blur(12px);
 }
@@ -120,10 +120,10 @@ export default function ShippingPolicy() {
 
       <div className="grain">
         {/* NAV */}
-        <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-12 py-5 bg-gradient-to-b from-[#050505] to-transparent font-body backdrop-blur-md">
+        <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-12 py-5 bg-gradient-to-b from-[#ffffff] to-transparent font-body backdrop-blur-md">
           <a
             href="/"
-            className="flex items-center gap-2.5 font-display text-lg md:text-xl tracking-[0.35em] text-[#f8f6f2] uppercase no-underline gold-glow"
+            className="flex items-center gap-2.5 font-display text-lg md:text-xl tracking-[0.35em] text-[#18181b] uppercase no-underline gold-glow"
           >
             <LogoMark className="h-6 w-auto opacity-90" />
             Exiles
@@ -132,21 +132,21 @@ export default function ShippingPolicy() {
           <div className="flex items-center gap-5 md:gap-8">
             <a
               href="/shop"
-              className="text-[10px] tracking-[0.2em] uppercase text-[#8f887c] hover:text-white transition-colors duration-300 no-underline"
+              className="text-[10px] tracking-[0.2em] uppercase text-[#71717a] hover:text-zinc-900 transition-colors duration-300 no-underline"
             >
               Home
             </a>
 
             <a
               href="/shop"
-              className="text-[10px] tracking-[0.2em] uppercase text-[#8f887c] hover:text-white transition-colors duration-300 no-underline hidden sm:block"
+              className="text-[10px] tracking-[0.2em] uppercase text-[#71717a] hover:text-zinc-900 transition-colors duration-300 no-underline hidden sm:block"
             >
               Shop
             </a>
 
             <a
               href="/cart"
-              className="text-[10px] tracking-[0.18em] uppercase text-[#d4af73] border border-[#d4af73]/20 px-4 py-2 hover:bg-[#d4af73]/10 transition-all duration-300 no-underline rounded-full"
+              className="text-[10px] tracking-[0.18em] uppercase text-[#9c7a3f] border border-[#d4af73]/20 px-4 py-2 hover:bg-[#d4af73]/10 transition-all duration-300 no-underline rounded-full"
             >
               ← Cart
             </a>
@@ -154,25 +154,25 @@ export default function ShippingPolicy() {
         </nav>
 
         {/* HEADER */}
-        <header className="relative pt-36 md:pt-44 pb-16 px-6 md:px-12 border-b border-[#161616] overflow-hidden font-body">
+        <header className="relative pt-36 md:pt-44 pb-16 px-6 md:px-12 border-b border-[#e4e4e7] overflow-hidden font-body">
           <span className="ghost-text">SHIPPING</span>
 
           <div className="relative max-w-3xl">
             <div className="flex items-center gap-3 mb-5">
               <span className="block w-8 h-px bg-[#d4af73]" />
 
-              <span className="text-[9px] tracking-[0.4em] uppercase text-[#d4af73] font-medium">
+              <span className="text-[9px] tracking-[0.4em] uppercase text-[#9c7a3f] font-medium">
                 Legal & Policies
               </span>
             </div>
 
-            <h1 className="font-display text-5xl md:text-7xl font-light tracking-[0.1em] uppercase text-[#f8f6f2] leading-none mb-6 gold-glow">
+            <h1 className="font-display text-5xl md:text-7xl font-light tracking-[0.1em] uppercase text-[#18181b] leading-none mb-6 gold-glow">
               Shipping
               <br />
               Policy
             </h1>
 
-            <p className="text-[13px] font-light text-[#8f887c] tracking-[0.06em] leading-loose max-w-md">
+            <p className="text-[13px] font-light text-[#71717a] tracking-[0.06em] leading-loose max-w-md">
               Every garment dispatched with care. Below are our delivery terms
               for orders placed within Nigeria.
             </p>
@@ -183,11 +183,11 @@ export default function ShippingPolicy() {
         <main className="max-w-5xl mx-auto px-6 md:px-12 py-16 md:py-20 grid grid-cols-1 md:grid-cols-[220px_1fr] gap-12 md:gap-16 font-body">
           {/* SIDEBAR */}
           <aside className="md:sticky md:top-24 self-start">
-            <p className="text-[9px] tracking-[0.35em] uppercase text-[#5e564b] mb-5">
+            <p className="text-[9px] tracking-[0.35em] uppercase text-[#a1a1aa] mb-5">
               On this page
             </p>
 
-            <ul className="flex flex-row flex-wrap md:flex-col gap-2 md:gap-0 md:border-l md:border-[#1a1a1a]">
+            <ul className="flex flex-row flex-wrap md:flex-col gap-2 md:gap-0 md:border-l md:border-[#e4e4e7]">
               {navItems.map(({ id, label }) => (
                 <li key={id}>
                   <button
@@ -195,8 +195,8 @@ export default function ShippingPolicy() {
                     className={`text-left text-[10px] tracking-[0.12em] uppercase px-3 md:px-5 py-2 transition-all duration-300 border md:border-0 md:border-l-2 md:ml-[-1px] w-auto md:w-full
                     ${
                       activeSection === id
-                        ? "text-white border-[#d4af73] bg-[#d4af73]/10 shadow-[0_0_20px_rgba(212,175,115,0.08)]"
-                        : "text-[#8f887c] border-[#2a2a2a] hover:text-white hover:border-[#d4af73]"
+                        ? "text-zinc-900 border-[#d4af73] bg-[#d4af73]/10 shadow-[0_0_20px_rgba(212,175,115,0.08)]"
+                        : "text-[#71717a] border-[#d4d4d8] hover:text-zinc-900 hover:border-[#d4af73]"
                     }`}
                   >
                     {label}
@@ -210,15 +210,15 @@ export default function ShippingPolicy() {
           <div className="space-y-24">
             {/* SECTION */}
             <section id="zones" className="fade-up delay-1">
-              <p className="text-[9px] tracking-[0.3em] uppercase text-[#d4af73] mb-3">
+              <p className="text-[9px] tracking-[0.3em] uppercase text-[#9c7a3f] mb-3">
                 01 — Zones
               </p>
 
-              <h2 className="font-display text-3xl md:text-4xl font-light tracking-[0.1em] uppercase text-[#f8f6f2] pb-4 border-b border-[#161616] mb-7 gold-glow">
+              <h2 className="font-display text-3xl md:text-4xl font-light tracking-[0.1em] uppercase text-[#18181b] pb-4 border-b border-[#e4e4e7] mb-7 gold-glow">
                 Delivery Zones & Rates
               </h2>
 
-              <p className="text-[13px] font-light text-[#d6d1c7] tracking-[0.04em] leading-loose mb-6">
+              <p className="text-[13px] font-light text-[#52525b] tracking-[0.04em] leading-loose mb-6">
                 We ship to all 36 states across Nigeria. Delivery fees are
                 calculated based on your location zone and displayed at checkout
                 before payment.
@@ -227,11 +227,11 @@ export default function ShippingPolicy() {
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse">
                   <thead>
-                    <tr className="border-b border-[#1a1a1a]">
+                    <tr className="border-b border-[#e4e4e7]">
                       {["Zone", "Coverage", "Fee", "Timeframe"].map((h) => (
                         <th
                           key={h}
-                          className="text-left text-[9px] tracking-[0.3em] uppercase text-[#8f887c] py-3 px-3 font-medium"
+                          className="text-left text-[9px] tracking-[0.3em] uppercase text-[#71717a] py-3 px-3 font-medium"
                         >
                           {h}
                         </th>
@@ -262,21 +262,21 @@ export default function ShippingPolicy() {
                     ].map((row) => (
                       <tr
                         key={row.zone}
-                        className="border-b border-[#1a1a1a]/50 hover:bg-white/[0.02] transition-colors"
+                        className="border-b border-[#e4e4e7]/50 hover:bg-white/[0.02] transition-colors"
                       >
-                        <td className="font-display text-base text-[#f8f6f2] tracking-[0.08em] py-4 px-3">
+                        <td className="font-display text-base text-[#18181b] tracking-[0.08em] py-4 px-3">
                           {row.zone}
                         </td>
 
-                        <td className="text-[12px] text-[#d6d1c7] tracking-[0.04em] py-4 px-3">
+                        <td className="text-[12px] text-[#52525b] tracking-[0.04em] py-4 px-3">
                           {row.coverage}
                         </td>
 
-                        <td className="text-[12px] text-[#d6d1c7] tracking-[0.04em] py-4 px-3">
+                        <td className="text-[12px] text-[#52525b] tracking-[0.04em] py-4 px-3">
                           {row.fee}
                         </td>
 
-                        <td className="text-[12px] text-[#d6d1c7] tracking-[0.04em] py-4 px-3">
+                        <td className="text-[12px] text-[#52525b] tracking-[0.04em] py-4 px-3">
                           {row.time}
                         </td>
                       </tr>
@@ -288,13 +288,13 @@ export default function ShippingPolicy() {
               <div className="relative mt-8 glass-border px-8 py-6 overflow-hidden rounded-2xl">
                 <span className="absolute left-0 top-0 bottom-0 w-[3px] bg-[#d4af73]" />
 
-                <p className="text-[9px] tracking-[0.35em] uppercase text-[#d4af73] mb-2">
+                <p className="text-[9px] tracking-[0.35em] uppercase text-[#9c7a3f] mb-2">
                   ✦ Complimentary Shipping
                 </p>
 
-                <p className="text-[12px] font-light text-[#d6d1c7] leading-loose">
+                <p className="text-[12px] font-light text-[#52525b] leading-loose">
                   Orders above{" "}
-                  <span className="text-[#f8f6f2]">₦100,000</span> qualify for
+                  <span className="text-[#18181b]">₦100,000</span> qualify for
                   free nationwide delivery.
                 </p>
               </div>
@@ -303,13 +303,13 @@ export default function ShippingPolicy() {
         </main>
 
         {/* FOOTER */}
-        <footer className="border-t border-[#161616] px-6 md:px-12 py-8 flex flex-col sm:flex-row justify-between items-center gap-3 font-body">
-          <span className="flex items-center gap-2 font-display text-base tracking-[0.4em] text-[#5e564b] uppercase">
+        <footer className="border-t border-[#e4e4e7] px-6 md:px-12 py-8 flex flex-col sm:flex-row justify-between items-center gap-3 font-body">
+          <span className="flex items-center gap-2 font-display text-base tracking-[0.4em] text-[#a1a1aa] uppercase">
             <LogoMark className="h-5 w-auto opacity-50" />
             Exiles
           </span>
 
-          <span className="text-[10px] tracking-[0.12em] text-[#5e564b]">
+          <span className="text-[10px] tracking-[0.12em] text-[#a1a1aa]">
             © 2025 Exiles. All rights reserved. Lagos, Nigeria.
           </span>
         </footer>
