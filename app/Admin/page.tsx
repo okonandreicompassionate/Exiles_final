@@ -3,15 +3,15 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase, isSupabaseConfigured } from "../../lib/supabase";
-import { Plus, Trash2, CheckCircle, LogOut, ShieldCheck, UserPlus, X } from "lucide-react";
+import { Plus, Trash2, CheckCircle } from "lucide-react";
 import { useToast } from "../components/toastProvider";
 import { Logo } from "../components/Logo";
 import { ImageUploadField } from "../components/ImageUploadField";
+import { AdminNav } from "./AdminNav";
 
 type Category = { id: string; name: string; slug: string };
 type SizeRow = { size: string; stock: number };
 type AdminRole = "god" | "admin";
-type AdminUser = { id: string; email: string; role: AdminRole; created_at: string };
 
 const ALL_SIZES = ["XS", "S", "M", "L", "XL", "XXL"];
 
@@ -32,13 +32,6 @@ export default function AdminPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-
-  const [showAdmins, setShowAdmins] = useState(false);
-  const [admins, setAdmins] = useState<AdminUser[]>([]);
-  const [adminsLoading, setAdminsLoading] = useState(false);
-  const [newAdminEmail, setNewAdminEmail] = useState("");
-  const [newAdminPassword, setNewAdminPassword] = useState("");
-  const [addingAdmin, setAddingAdmin] = useState(false);
 
   const [form, setForm] = useState({
     name: "",
@@ -116,15 +109,23 @@ export default function AdminPage() {
     bootstrap();
   }, []);
 
-  useEffect(() => {
-    if (authed) fetchCategories();
-  }, [authed]);
-
   async function fetchCategories() {
     if (!supabase) return;
-    const { data } = await supabase.from("categories").select("id, name, slug");
+    const { data, error } = await supabase.from("categories").select("id, name, slug");
+    if (error) {
+      showToast(`Failed to load categories: ${error.message}`, "error");
+      return;
+    }
+    if ((data ?? []).length === 0) {
+      showToast("No categories found — run the seed insert in supabase/schema.sql", "error");
+    }
     setCategories(data ?? []);
   }
+
+  useEffect(() => {
+    if (authed) fetchCategories();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authed]);
 
   async function handleLogin() {
     if (!supabase) {
@@ -173,73 +174,6 @@ export default function AdminPage() {
     setAuthed(false);
     setRole(null);
     router.push("/Admin");
-  }
-
-  async function authHeader(): Promise<Record<string, string>> {
-    if (!supabase) return {};
-    const { data } = await supabase.auth.getSession();
-    const token = data.session?.access_token;
-    return token ? { Authorization: `Bearer ${token}` } : {};
-  }
-
-  async function fetchAdmins() {
-    setAdminsLoading(true);
-    try {
-      const res = await fetch("/api/admin/list-admins", { headers: await authHeader() });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error);
-      setAdmins(json.admins ?? []);
-    } catch (err) {
-      showToast(err instanceof Error ? err.message : "Failed to load admins", "error");
-    }
-    setAdminsLoading(false);
-  }
-
-  function toggleAdminsPanel() {
-    const next = !showAdmins;
-    setShowAdmins(next);
-    if (next) fetchAdmins();
-  }
-
-  async function handleAddAdmin() {
-    if (!newAdminEmail || !newAdminPassword) {
-      showToast("Enter email and password for the new admin", "error");
-      return;
-    }
-    setAddingAdmin(true);
-    try {
-      const res = await fetch("/api/admin/create-admin", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", ...(await authHeader()) },
-        body: JSON.stringify({ email: newAdminEmail, password: newAdminPassword }),
-      });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error);
-      showToast(`Admin added: ${newAdminEmail}`, "success");
-      setNewAdminEmail("");
-      setNewAdminPassword("");
-      fetchAdmins();
-    } catch (err) {
-      showToast(err instanceof Error ? err.message : "Failed to add admin", "error");
-    }
-    setAddingAdmin(false);
-  }
-
-  async function handleRemoveAdmin(id: string, email: string) {
-    if (!confirm(`Remove admin access for ${email}?`)) return;
-    try {
-      const res = await fetch("/api/admin/remove-admin", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", ...(await authHeader()) },
-        body: JSON.stringify({ id }),
-      });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error);
-      showToast(`Removed ${email}`, "info");
-      fetchAdmins();
-    } catch (err) {
-      showToast(err instanceof Error ? err.message : "Failed to remove admin", "error");
-    }
   }
 
   function handleFormChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) {
@@ -441,112 +375,9 @@ export default function AdminPage() {
   return (
     <div className="min-h-screen bg-white text-zinc-900">
 
-      {/* NAV */}
-      <nav className="sticky top-0 z-50 glass-nav">
-        <div className="max-w-4xl mx-auto px-4 sm:px-8 py-4 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <Logo showText={false} markClassName="h-7" />
-            <h1 className="font-bold tracking-[0.4em] text-sm uppercase hidden sm:block">Admin</h1>
-          </div>
-          <div className="flex items-center gap-4 sm:gap-6">
-            {role === "god" && (
-              <button
-                onClick={toggleAdminsPanel}
-                className="flex items-center gap-1.5 text-xs tracking-widest uppercase text-zinc-500 hover:text-zinc-900 transition-colors"
-              >
-                <ShieldCheck size={14} />
-                <span className="hidden sm:inline">Admins</span>
-              </button>
-            )}
-            <button
-              onClick={() => router.push("/Admin/dashboard")}
-              className="text-xs tracking-widest uppercase text-zinc-500 hover:text-zinc-900 transition-colors"
-            >
-              Dashboard
-            </button>
-            <button
-              onClick={() => router.push("/Admin/edit")}
-              className="text-xs tracking-widest uppercase text-zinc-500 hover:text-zinc-900 transition-colors"
-            >
-              Edit Products
-            </button>
-            <button
-              onClick={() => router.push("/shop")}
-              className="text-xs tracking-widest uppercase text-zinc-500 hover:text-zinc-900 transition-colors hidden sm:block"
-            >
-              View Shop
-            </button>
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-1.5 text-xs tracking-widest uppercase text-zinc-500 hover:text-red-500 transition-colors"
-              title={myEmail}
-            >
-              <LogOut size={14} />
-            </button>
-          </div>
-        </div>
-      </nav>
+      <AdminNav role={role} onLogout={handleLogout} email={myEmail} />
 
       <div className="max-w-4xl mx-auto px-4 sm:px-8 py-10 pb-24">
-
-        {/* ADMIN MANAGEMENT — god only */}
-        {role === "god" && showAdmins && (
-          <div className="glass rounded-2xl p-5 sm:p-6 mb-8 space-y-5">
-            <div className="flex items-center justify-between">
-              <p className="text-[10px] tracking-[0.4em] uppercase text-amber-700 font-medium">
-                Manage Admins
-              </p>
-              <button onClick={() => setShowAdmins(false)} className="text-zinc-400 hover:text-zinc-900">
-                <X size={16} />
-              </button>
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-2">
-              <input
-                type="email"
-                placeholder="New admin email"
-                value={newAdminEmail}
-                onChange={(e) => setNewAdminEmail(e.target.value)}
-                className={inputClass}
-              />
-              <input
-                type="password"
-                placeholder="Temporary password (min 8 chars)"
-                value={newAdminPassword}
-                onChange={(e) => setNewAdminPassword(e.target.value)}
-                className={inputClass}
-              />
-              <button
-                onClick={handleAddAdmin}
-                disabled={addingAdmin}
-                className="flex items-center justify-center gap-1.5 px-5 py-3 bg-zinc-900 text-white text-xs tracking-widest uppercase font-semibold rounded-xl hover:bg-zinc-700 transition-colors disabled:opacity-50 flex-shrink-0"
-              >
-                <UserPlus size={14} />
-                Add
-              </button>
-            </div>
-
-            <div className="space-y-2">
-              {adminsLoading && <p className="text-xs text-zinc-400">Loading...</p>}
-              {!adminsLoading && admins.map((a) => (
-                <div key={a.id} className="flex items-center justify-between px-4 py-3 rounded-xl bg-zinc-900/[0.03]">
-                  <div>
-                    <p className="text-sm text-zinc-900">{a.email}</p>
-                    <p className="text-[10px] uppercase tracking-widest text-zinc-400">{a.role}</p>
-                  </div>
-                  {a.role !== "god" && (
-                    <button
-                      onClick={() => handleRemoveAdmin(a.id, a.email)}
-                      className="text-zinc-400 hover:text-red-500 transition-colors"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
 
         {/* SUCCESS BANNER */}
         {success && (

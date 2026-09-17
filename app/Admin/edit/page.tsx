@@ -7,6 +7,7 @@ import { Trash2, Plus, CheckCircle, X, ChevronDown, ChevronUp } from "lucide-rea
 import { useToast } from "../../components/toastProvider";
 import { Logo } from "../../components/Logo";
 import { ImageUploadField } from "../../components/ImageUploadField";
+import { AdminNav } from "../AdminNav";
 
 const ALL_SIZES = ["XS", "S", "M", "L", "XL", "XXL"];
 
@@ -35,6 +36,8 @@ export default function EditProductsPage() {
 
   const [checkingSession, setCheckingSession] = useState(true);
   const [authed, setAuthed] = useState(false);
+  const [role, setRole] = useState<"god" | "admin" | null>(null);
+  const [myEmail, setMyEmail] = useState("");
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [loginLoading, setLoginLoading] = useState(false);
@@ -53,7 +56,7 @@ export default function EditProductsPage() {
   // masking every failure as "not an admin".
   async function fetchMyAdminRow(
     accessToken: string
-  ): Promise<{ admin: { role: string; email: string } | null; error: string | null }> {
+  ): Promise<{ admin: { role: "god" | "admin"; email: string } | null; error: string | null }> {
     try {
       const res = await fetch("/api/admin/me", {
         headers: { Authorization: `Bearer ${accessToken}` },
@@ -88,6 +91,8 @@ export default function EditProductsPage() {
 
       if (adminRow) {
         setAuthed(true);
+        setRole(adminRow.role);
+        setMyEmail(adminRow.email);
       } else {
         if (adminErr && adminErr !== "Not an admin") {
           showToast(`Admin check failed: ${adminErr}`, "error");
@@ -136,21 +141,27 @@ export default function EditProductsPage() {
     }
 
     setAuthed(true);
+    setRole(adminRow.role);
+    setMyEmail(adminRow.email);
     setLoginPassword("");
     setLoginLoading(false);
   }
 
-  useEffect(() => {
-    if (authed) {
-      fetchProducts();
-      fetchCategories();
-    }
-  }, [authed]);
+  async function handleLogout() {
+    if (supabase) await supabase.auth.signOut();
+    setAuthed(false);
+    setRole(null);
+    router.push("/Admin/edit");
+  }
 
   async function fetchCategories() {
     if (!supabase) return;
 
-    const { data } = await supabase.from("categories").select("id, name, slug");
+    const { data, error } = await supabase.from("categories").select("id, name, slug");
+    if (error) {
+      showToast(`Failed to load categories: ${error.message}`, "error");
+      return;
+    }
     setCategories(data ?? []);
   }
 
@@ -184,6 +195,14 @@ export default function EditProductsPage() {
     parsed.forEach((p) => { seed[p.id] = JSON.parse(JSON.stringify(p)); });
     setEditData(seed);
   }
+
+  useEffect(() => {
+    if (authed) {
+      fetchProducts();
+      fetchCategories();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authed]);
 
   function toggleExpand(id: string) {
     setExpandedId((prev) => (prev === id ? null : id));
@@ -382,36 +401,7 @@ export default function EditProductsPage() {
   return (
     <div className="min-h-screen bg-white text-zinc-900">
 
-      {/* NAV */}
-      <nav className="sticky top-0 z-50 glass-nav">
-        <div className="max-w-4xl mx-auto px-4 sm:px-8 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3 sm:gap-6">
-            <Logo showText={false} markClassName="h-7" />
-            <span className="text-zinc-300 text-xs hidden sm:inline">|</span>
-            <span className="text-zinc-500 text-xs tracking-widest uppercase hidden sm:inline">Edit Products</span>
-          </div>
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => router.push("/Admin/dashboard")}
-              className="text-xs tracking-widest uppercase text-zinc-500 hover:text-zinc-900 transition-colors"
-            >
-              Dashboard
-            </button>
-            <button
-              onClick={() => router.push("/Admin")}
-              className="text-xs tracking-widest uppercase text-zinc-500 hover:text-zinc-900 transition-colors"
-            >
-              + Add New
-            </button>
-            <button
-              onClick={() => router.push("/shop")}
-              className="text-xs tracking-widest uppercase text-zinc-500 hover:text-zinc-900 transition-colors"
-            >
-              View Shop
-            </button>
-          </div>
-        </div>
-      </nav>
+      <AdminNav role={role} onLogout={handleLogout} email={myEmail} />
 
       <div className="max-w-4xl mx-auto px-4 sm:px-8 py-10 pb-24 space-y-3">
 

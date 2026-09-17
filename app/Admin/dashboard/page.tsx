@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import { supabase, isSupabaseConfigured } from "../../../lib/supabase";
 import { useToast } from "../../components/toastProvider";
 import { Logo } from "../../components/Logo";
+import { AdminNav } from "../AdminNav";
 import {
-  LogOut,
   Search,
   ShoppingBag,
   Clock,
@@ -279,29 +279,7 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="min-h-screen bg-white text-zinc-900">
-      {/* NAV */}
-      <nav className="sticky top-0 z-50 glass-nav">
-        <div className="max-w-6xl mx-auto px-4 sm:px-8 py-4 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <Logo showText={false} markClassName="h-7" />
-            <h1 className="font-bold tracking-[0.4em] text-sm uppercase hidden sm:block">Dashboard</h1>
-          </div>
-          <div className="flex items-center gap-4 sm:gap-6">
-            <button onClick={() => router.push("/Admin")} className="text-xs tracking-widest uppercase text-zinc-500 hover:text-zinc-900 transition-colors">
-              Add New
-            </button>
-            <button onClick={() => router.push("/Admin/edit")} className="text-xs tracking-widest uppercase text-zinc-500 hover:text-zinc-900 transition-colors">
-              Edit Products
-            </button>
-            <button onClick={() => router.push("/shop")} className="text-xs tracking-widest uppercase text-zinc-500 hover:text-zinc-900 transition-colors hidden sm:block">
-              View Shop
-            </button>
-            <button onClick={handleLogout} className="text-zinc-500 hover:text-red-500 transition-colors">
-              <LogOut size={14} />
-            </button>
-          </div>
-        </div>
-      </nav>
+      <AdminNav role={data?.role ?? null} onLogout={handleLogout} />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-8 py-10 pb-24 space-y-10">
         {loadingData && !data && (
