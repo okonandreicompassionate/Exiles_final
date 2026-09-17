@@ -16,6 +16,9 @@ import {
   TrendingUp,
   Wallet,
   Boxes,
+  LayoutGrid,
+  LineChart,
+  MapPin,
 } from "lucide-react";
 
 const inputClass =
@@ -48,7 +51,7 @@ type OrderRow = {
   status: "pending" | "paid" | "fulfilled" | "cancelled";
   createdAt: string;
   itemCount: number;
-  total: number | null;
+  total: number;
 };
 type DashboardData = {
   role: "god" | "admin";
@@ -68,6 +71,19 @@ type DashboardData = {
     paidOrderCount: number;
     last14Days: { day: string; order_count: number; revenue: number }[];
     topProducts: { name: string; revenue: number; quantity: number }[];
+  };
+  analytics?: {
+    revenueByCategory: { categoryName: string; revenue: number }[];
+    ordersByState: { state: string; count: number }[];
+    ordersByWeekday: { label: string; revenue: number; orders: number }[];
+    funnel: {
+      pending: number;
+      paid: number;
+      fulfilled: number;
+      cancelled: number;
+      fulfillmentRate: number;
+      cancellationRate: number;
+    };
   };
 };
 
@@ -281,7 +297,29 @@ export default function AdminDashboardPage() {
     <div className="min-h-screen bg-white text-zinc-900">
       <AdminNav role={data?.role ?? null} onLogout={handleLogout} />
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-8 py-10 pb-24 space-y-10">
+      {/* QUICK-JUMP — same sections, same order, findable at a glance */}
+      {data && (
+        <div className="sticky top-[calc(4rem+1px)] z-40 glass-nav border-t border-zinc-900/5">
+          <div className="max-w-6xl mx-auto px-4 sm:px-8 py-2.5 flex items-center gap-5 overflow-x-auto">
+            <a href="#overview" className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-zinc-500 hover:text-zinc-900 transition-colors whitespace-nowrap">
+              <LayoutGrid size={12} /> Overview
+            </a>
+            {data.analytics && (
+              <a href="#analytics" className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-zinc-500 hover:text-zinc-900 transition-colors whitespace-nowrap">
+                <LineChart size={12} /> Analytics
+              </a>
+            )}
+            <a href="#stock" className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-zinc-500 hover:text-zinc-900 transition-colors whitespace-nowrap">
+              <Boxes size={12} /> Stock
+            </a>
+            <a href="#orders" className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-zinc-500 hover:text-zinc-900 transition-colors whitespace-nowrap">
+              <ShoppingBag size={12} /> Orders
+            </a>
+          </div>
+        </div>
+      )}
+
+      <div className="max-w-6xl mx-auto px-4 sm:px-8 py-10 pb-24 space-y-14">
         {loadingData && !data && (
           <div className="flex justify-center py-20">
             <div className="w-5 h-5 rounded-full border-2 border-zinc-900/15 border-t-zinc-900 animate-spin" />
@@ -291,7 +329,7 @@ export default function AdminDashboardPage() {
         {data && (
           <>
             {/* ── KPI CARDS ── */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div id="overview" className="grid grid-cols-2 lg:grid-cols-4 gap-4 scroll-mt-28">
               <KpiCard icon={ShoppingBag} label="Orders" value={String(data.orders.total)} />
               <KpiCard icon={Clock} label="Pending" value={String(byStatus.pending ?? 0)} accent="text-amber-600" />
               <KpiCard icon={PackageCheck} label="Fulfilled" value={String(byStatus.fulfilled ?? 0)} accent="text-emerald-600" />
@@ -317,7 +355,7 @@ export default function AdminDashboardPage() {
               )}
             </div>
 
-            {/* ── REVENUE CHART + TOP PRODUCTS (god only) ── */}
+            {/* ── REVENUE CHART + TOP PRODUCTS ── */}
             {data.revenue && (
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2 glass rounded-2xl p-5">
@@ -374,8 +412,138 @@ export default function AdminDashboardPage() {
               </div>
             )}
 
+            {/* ── ANALYTICS — god only: patterns beyond the headline numbers ── */}
+            {data.analytics && (
+              <div id="analytics" className="scroll-mt-28">
+                <div className="flex items-center gap-2 mb-4">
+                  <LineChart size={14} className="text-amber-700" />
+                  <p className="text-[10px] tracking-[0.4em] uppercase text-amber-700 font-medium">Analytics</p>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                  {/* FUNNEL */}
+                  <div className="glass rounded-2xl p-5">
+                    <p className="text-[10px] tracking-[0.3em] uppercase text-zinc-400 mb-4">Order Funnel</p>
+                    <div className="space-y-3">
+                      {(
+                        [
+                          { label: "Pending", value: data.analytics.funnel.pending, color: "bg-amber-500" },
+                          { label: "Paid", value: data.analytics.funnel.paid, color: "bg-sky-500" },
+                          { label: "Fulfilled", value: data.analytics.funnel.fulfilled, color: "bg-emerald-500" },
+                          { label: "Cancelled", value: data.analytics.funnel.cancelled, color: "bg-red-400" },
+                        ] as const
+                      ).map((row) => {
+                        const max = Math.max(
+                          1,
+                          data.analytics!.funnel.pending,
+                          data.analytics!.funnel.paid,
+                          data.analytics!.funnel.fulfilled,
+                          data.analytics!.funnel.cancelled
+                        );
+                        return (
+                          <div key={row.label} className="flex items-center gap-3">
+                            <span className="w-16 text-[10px] uppercase tracking-widest text-zinc-500 flex-shrink-0">
+                              {row.label}
+                            </span>
+                            <div className="flex-1 h-2.5 rounded-full bg-zinc-900/5 overflow-hidden">
+                              <div
+                                className={`h-full rounded-full ${row.color}`}
+                                style={{ width: `${Math.max(3, (row.value / max) * 100)}%` }}
+                              />
+                            </div>
+                            <span className="w-8 text-right text-xs text-zinc-700 tabular-nums flex-shrink-0">
+                              {row.value}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div className="flex gap-4 mt-4 pt-4 border-t border-zinc-900/10 text-[10px] text-zinc-500">
+                      <span><span className="text-zinc-900 font-semibold">{data.analytics.funnel.fulfillmentRate}%</span> paid or fulfilled</span>
+                      <span><span className="text-zinc-900 font-semibold">{data.analytics.funnel.cancellationRate}%</span> cancelled</span>
+                    </div>
+                  </div>
+
+                  {/* ORDERS BY WEEKDAY */}
+                  <div className="glass rounded-2xl p-5">
+                    <p className="text-[10px] tracking-[0.3em] uppercase text-zinc-400 mb-4">Busiest Days</p>
+                    <div className="flex items-end gap-2 h-28">
+                      {data.analytics.ordersByWeekday.map((d) => {
+                        const max = Math.max(1, ...data.analytics!.ordersByWeekday.map((x) => x.orders));
+                        return (
+                          <div key={d.label} className="flex-1 flex flex-col items-center gap-1.5 group relative">
+                            <div className="w-full flex items-end h-20">
+                              <div
+                                className="w-full bg-zinc-900 rounded-t-md group-hover:bg-amber-600 transition-colors"
+                                style={{ height: `${Math.max(4, (d.orders / max) * 100)}%` }}
+                              />
+                            </div>
+                            <span className="text-[9px] text-zinc-400">{d.label}</span>
+                            <div className="pointer-events-none absolute -top-8 opacity-0 group-hover:opacity-100 transition-opacity glass-strong text-[10px] px-2 py-1 rounded-lg whitespace-nowrap">
+                              {d.orders} orders · {naira(d.revenue)}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* REVENUE BY CATEGORY */}
+                  <div className="glass rounded-2xl p-5">
+                    <p className="text-[10px] tracking-[0.3em] uppercase text-zinc-400 mb-4">Revenue by Category</p>
+                    {data.analytics.revenueByCategory.length === 0 ? (
+                      <p className="text-xs text-zinc-400">No paid orders yet.</p>
+                    ) : (
+                      <div className="space-y-2.5">
+                        {data.analytics.revenueByCategory.map((c) => {
+                          const max = Math.max(1, ...data.analytics!.revenueByCategory.map((x) => x.revenue));
+                          return (
+                            <div key={c.categoryName} className="flex items-center gap-3">
+                              <span className="w-20 text-xs text-zinc-600 truncate flex-shrink-0">{c.categoryName}</span>
+                              <div className="flex-1 h-2 rounded-full bg-zinc-900/5 overflow-hidden">
+                                <div className="h-full rounded-full bg-amber-600" style={{ width: `${Math.max(3, (c.revenue / max) * 100)}%` }} />
+                              </div>
+                              <span className="text-xs text-zinc-900 font-medium flex-shrink-0">{naira(c.revenue)}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* ORDERS BY STATE */}
+                  <div className="glass rounded-2xl p-5">
+                    <div className="flex items-center gap-1.5 mb-4">
+                      <MapPin size={12} className="text-zinc-400" />
+                      <p className="text-[10px] tracking-[0.3em] uppercase text-zinc-400">Top Delivery States</p>
+                    </div>
+                    {data.analytics.ordersByState.length === 0 ? (
+                      <p className="text-xs text-zinc-400">No paid orders yet.</p>
+                    ) : (
+                      <div className="space-y-2.5">
+                        {data.analytics.ordersByState.map((s) => {
+                          const max = Math.max(1, ...data.analytics!.ordersByState.map((x) => x.count));
+                          return (
+                            <div key={s.state} className="flex items-center gap-3">
+                              <span className="w-20 text-xs text-zinc-600 truncate flex-shrink-0">{s.state}</span>
+                              <div className="flex-1 h-2 rounded-full bg-zinc-900/5 overflow-hidden">
+                                <div className="h-full rounded-full bg-sky-600" style={{ width: `${Math.max(3, (s.count / max) * 100)}%` }} />
+                              </div>
+                              <span className="text-xs text-zinc-900 font-medium flex-shrink-0">{s.count}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* ── STOCK TRACKER ── */}
-            <div>
+            <div id="stock" className="scroll-mt-28">
               <div className="flex items-center gap-2 mb-4">
                 <Boxes size={14} className="text-amber-700" />
                 <p className="text-[10px] tracking-[0.4em] uppercase text-amber-700 font-medium">Stock Tracker</p>
@@ -495,7 +663,7 @@ export default function AdminDashboardPage() {
             </div>
 
             {/* ── RECENT ORDERS ── */}
-            <div>
+            <div id="orders" className="scroll-mt-28">
               <p className="text-[10px] tracking-[0.4em] uppercase text-amber-700 font-medium mb-4">Recent Orders</p>
               <div className="glass rounded-2xl overflow-hidden">
                 <div className="overflow-x-auto">
@@ -505,7 +673,7 @@ export default function AdminDashboardPage() {
                         <th className="text-left py-3 px-4 font-medium">Customer</th>
                         <th className="text-left py-3 px-4 font-medium hidden sm:table-cell">State</th>
                         <th className="text-left py-3 px-4 font-medium">Items</th>
-                        {data.role === "god" && <th className="text-right py-3 px-4 font-medium">Total</th>}
+                        <th className="text-right py-3 px-4 font-medium">Total</th>
                         <th className="text-left py-3 px-4 font-medium">Status</th>
                         <th className="text-right py-3 px-4 font-medium">Action</th>
                       </tr>
@@ -519,11 +687,7 @@ export default function AdminDashboardPage() {
                           </td>
                           <td className="py-3 px-4 text-zinc-500 hidden sm:table-cell">{o.state}</td>
                           <td className="py-3 px-4 text-zinc-600">{o.itemCount}</td>
-                          {data.role === "god" && (
-                            <td className="py-3 px-4 text-right font-medium text-zinc-900">
-                              {o.total !== null ? naira(o.total) : "—"}
-                            </td>
-                          )}
+                          <td className="py-3 px-4 text-right font-medium text-zinc-900">{naira(o.total)}</td>
                           <td className="py-3 px-4">
                             <span className={`text-[10px] uppercase tracking-widest px-2 py-1 rounded-full ${STATUS_STYLES[o.status]}`}>
                               {o.status}

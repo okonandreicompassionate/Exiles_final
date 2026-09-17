@@ -10,6 +10,8 @@ type StockCategoryAgg = {
   productCount: number;
 };
 
+const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
 export async function GET(req: NextRequest) {
   const requester = await getRequestingAdmin(req);
   if ("error" in requester) {
@@ -54,6 +56,9 @@ export async function GET(req: NextRequest) {
     variants: variantsByProduct.get(p.product_id as string) ?? [],
   }));
 
+  const productCategoryName = new Map<string, string>();
+  stockProducts.forEach((p) => productCategoryName.set(p.id, p.categoryName));
+
   const categoryMap = new Map<string, StockCategoryAgg>();
   stockProducts.forEach((p) => {
     const key = p.categoryId ?? "none";
@@ -70,7 +75,7 @@ export async function GET(req: NextRequest) {
     categoryMap.set(key, entry);
   });
 
-  // ── ORDERS ──
+  // ── ORDERS (recent, for the table) ──
   const { data: orderRows, error: ordersErr } = await db
     .from("orders")
     .select(
@@ -83,12 +88,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: ordersErr.message }, { status: 400 });
   }
 
-  const byStatus = { pending: 0, paid: 0, fulfilled: 0, cancelled: 0 };
-  (orderRows ?? []).forEach((o) => {
-    const key = o.status as keyof typeof byStatus;
-    if (key in byStatus) byStatus[key] += 1;
-  });
-
   const orders = (orderRows ?? []).map((o) => ({
     id: o.id as string,
     customerName: o.customer_name as string,
@@ -97,8 +96,16 @@ export async function GET(req: NextRequest) {
     status: o.status as string,
     createdAt: o.created_at as string,
     itemCount: ((o.order_items as { quantity: number }[]) ?? []).reduce((sum, i) => sum + i.quantity, 0),
-    total: role === "god" ? (o.total as number) : null,
+    total: o.total as number,
   }));
+
+  // ── FUNNEL — every order's status, not just the last 100 ──
+  const { data: allStatusRows } = await db.from("orders").select("status");
+  const byStatus = { pending: 0, paid: 0, fulfilled: 0, cancelled: 0 };
+  (allStatusRows ?? []).forEach((o) => {
+    const key = o.status as keyof typeof byStatus;
+    if (key in byStatus) byStatus[key] += 1;
+  });
 
   const payload: Record<string, unknown> = {
     role,
@@ -108,47 +115,96 @@ export async function GET(req: NextRequest) {
       categoryOptions: categories ?? [],
     },
     orders: {
-      total: orderRows?.length ?? 0,
+      total: allStatusRows?.length ?? 0,
       byStatus,
       recent: orders,
     },
   };
 
-  // ── REVENUE — god only ──
+  // ── REVENUE — every admin sees the basics now ──
+  const { data: dailyRows } = await db.from("daily_revenue").select("*").limit(14);
+
+  const { data: paidOrders } = await db
+    .from("orders")
+    .select("total, state, created_at")
+    .in("status", ["paid", "fulfilled"]);
+
+  const totalRevenue = (paidOrders ?? []).reduce((sum, o) => sum + (o.total as number), 0);
+  const paidOrderCount = paidOrders?.length ?? 0;
+  const averageOrderValue = paidOrderCount > 0 ? Math.round(totalRevenue / paidOrderCount) : 0;
+
+  const { data: itemRows } = await db
+    .from("order_items")
+    .select("name, price, quantity, product_id, orders!inner(status)")
+    .in("orders.status", ["paid", "fulfilled"]);
+
+  const topMap = new Map<string, { name: string; revenue: number; quantity: number }>();
+  const categoryRevenueMap = new Map<string, number>();
+  (itemRows ?? []).forEach((i) => {
+    const row = i as unknown as { name: string; price: number; quantity: number; product_id: string | null };
+    const lineRevenue = row.price * row.quantity;
+
+    const entry = topMap.get(row.name) ?? { name: row.name, revenue: 0, quantity: 0 };
+    entry.revenue += lineRevenue;
+    entry.quantity += row.quantity;
+    topMap.set(row.name, entry);
+
+    const catName = (row.product_id && productCategoryName.get(row.product_id)) || "Uncategorized";
+    categoryRevenueMap.set(catName, (categoryRevenueMap.get(catName) ?? 0) + lineRevenue);
+  });
+
+  const topProducts = Array.from(topMap.values())
+    .sort((a, b) => b.revenue - a.revenue)
+    .slice(0, 5);
+
+  payload.revenue = {
+    totalRevenue,
+    averageOrderValue,
+    paidOrderCount,
+    last14Days: (dailyRows ?? []).slice().reverse(),
+    topProducts,
+  };
+
+  // ── ANALYTICS — god only: deeper patterns beyond the headline numbers ──
   if (role === "god") {
-    const { data: dailyRows } = await db.from("daily_revenue").select("*").limit(14);
+    const revenueByCategory = Array.from(categoryRevenueMap.entries())
+      .map(([categoryName, revenue]) => ({ categoryName, revenue }))
+      .sort((a, b) => b.revenue - a.revenue);
 
-    const { data: paidOrders } = await db.from("orders").select("total").in("status", ["paid", "fulfilled"]);
+    const stateMap = new Map<string, number>();
+    const weekdayRevenue = new Array(7).fill(0);
+    const weekdayOrders = new Array(7).fill(0);
+    (paidOrders ?? []).forEach((o) => {
+      const state = (o.state as string) || "Unknown";
+      stateMap.set(state, (stateMap.get(state) ?? 0) + 1);
 
-    const totalRevenue = (paidOrders ?? []).reduce((sum, o) => sum + (o.total as number), 0);
-    const paidOrderCount = paidOrders?.length ?? 0;
-    const averageOrderValue = paidOrderCount > 0 ? Math.round(totalRevenue / paidOrderCount) : 0;
-
-    const { data: itemRows } = await db
-      .from("order_items")
-      .select("name, price, quantity, orders!inner(status)")
-      .in("orders.status", ["paid", "fulfilled"]);
-
-    const topMap = new Map<string, { name: string; revenue: number; quantity: number }>();
-    (itemRows ?? []).forEach((i) => {
-      const row = i as unknown as { name: string; price: number; quantity: number };
-      const entry = topMap.get(row.name) ?? { name: row.name, revenue: 0, quantity: 0 };
-      entry.revenue += row.price * row.quantity;
-      entry.quantity += row.quantity;
-      topMap.set(row.name, entry);
+      const day = new Date(o.created_at as string).getDay();
+      weekdayRevenue[day] += o.total as number;
+      weekdayOrders[day] += 1;
     });
 
-    const topProducts = Array.from(topMap.values())
-      .sort((a, b) => b.revenue - a.revenue)
-      .slice(0, 5);
+    const ordersByState = Array.from(stateMap.entries())
+      .map(([state, count]) => ({ state, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 6);
 
-    payload.revenue = {
-      totalRevenue,
-      averageOrderValue,
-      paidOrderCount,
-      last14Days: (dailyRows ?? []).slice().reverse(),
-      topProducts,
+    const ordersByWeekday = WEEKDAY_LABELS.map((label, i) => ({
+      label,
+      revenue: weekdayRevenue[i],
+      orders: weekdayOrders[i],
+    }));
+
+    const totalOrders = allStatusRows?.length ?? 0;
+    const funnel = {
+      pending: byStatus.pending,
+      paid: byStatus.paid,
+      fulfilled: byStatus.fulfilled,
+      cancelled: byStatus.cancelled,
+      fulfillmentRate: totalOrders > 0 ? Math.round(((byStatus.paid + byStatus.fulfilled) / totalOrders) * 100) : 0,
+      cancellationRate: totalOrders > 0 ? Math.round((byStatus.cancelled / totalOrders) * 100) : 0,
     };
+
+    payload.analytics = { revenueByCategory, ordersByState, ordersByWeekday, funnel };
   }
 
   return NextResponse.json(payload);

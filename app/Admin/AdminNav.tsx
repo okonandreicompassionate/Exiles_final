@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, usePathname } from "next/navigation";
-import { LogOut } from "lucide-react";
+import { LogOut, LayoutDashboard, PlusSquare, ListChecks, ShieldCheck, FileText, Store } from "lucide-react";
 import { Logo } from "../components/Logo";
 
 type Props = {
@@ -11,11 +11,11 @@ type Props = {
 };
 
 const LINKS = [
-  { href: "/Admin/dashboard", label: "Dashboard" },
-  { href: "/Admin", label: "Add New" },
-  { href: "/Admin/edit", label: "Edit Products" },
-  { href: "/Admin/admins", label: "Admins", godOnly: true },
-  { href: "/Admin/handoff", label: "Handoff", godOnly: true },
+  { href: "/Admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/Admin", label: "Add New", icon: PlusSquare },
+  { href: "/Admin/edit", label: "Edit Products", icon: ListChecks },
+  { href: "/Admin/admins", label: "Admins", icon: ShieldCheck, godOnly: true },
+  { href: "/Admin/handoff", label: "Handoff", icon: FileText, godOnly: true },
 ];
 
 /**
@@ -39,23 +39,26 @@ export function AdminNav({ role, onLogout, email }: Props) {
         <div className="flex items-center gap-4 sm:gap-6 overflow-x-auto">
           {LINKS.filter((link) => !link.godOnly || role === "god").map((link) => {
             const active = pathname === link.href;
+            const Icon = link.icon;
             return (
               <button
                 key={link.href}
                 onClick={() => router.push(link.href)}
-                className={`text-xs tracking-widest uppercase transition-colors whitespace-nowrap flex-shrink-0 ${
+                className={`flex items-center gap-1.5 text-xs tracking-widest uppercase transition-colors whitespace-nowrap flex-shrink-0 ${
                   active ? "text-zinc-900" : "text-zinc-500 hover:text-zinc-900"
                 }`}
               >
-                {link.label}
+                <Icon size={13} />
+                <span className="hidden md:inline">{link.label}</span>
               </button>
             );
           })}
           <button
             onClick={() => router.push("/shop")}
-            className="text-xs tracking-widest uppercase text-zinc-500 hover:text-zinc-900 transition-colors hidden sm:block flex-shrink-0"
+            className="flex items-center gap-1.5 text-xs tracking-widest uppercase text-zinc-500 hover:text-zinc-900 transition-colors hidden sm:flex flex-shrink-0"
           >
-            View Shop
+            <Store size={13} />
+            <span className="hidden md:inline">View Shop</span>
           </button>
           <button
             onClick={onLogout}

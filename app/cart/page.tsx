@@ -43,7 +43,8 @@ const inputClass = "w-full glass-input text-zinc-900 text-sm px-4 py-3.5 rounded
 export default function CartPage() {
   const { cartItems, removeFromCart, updateQuantity } = useCart();
   const { showToast } = useToast();
-  const [loading, setLoading] = useState(false);
+  const [payingCard, setPayingCard] = useState(false);
+  const [payingTransfer, setPayingTransfer] = useState(false);
   const [step, setStep] = useState<"bag" | "delivery">("bag");
   const [form, setForm] = useState({
     name: "",
@@ -67,32 +68,19 @@ export default function CartPage() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleCheckout = async () => {
-  if (!form.email || !form.name || !form.phone || !form.address || !form.state) {
-    showToast("Please fill in all required fields", "error");
-    return;
-  }
-
-  setLoading(true);
-
-  const orderData = {
-    form,
-    cartItems,
-    subtotal: orderTotal,
-    deliveryFee,
-    total: grandTotal,
+  const validateForm = () => {
+    if (!form.email || !form.name || !form.phone || !form.address || !form.state) {
+      showToast("Please fill in all required fields", "error");
+      return false;
+    }
+    return true;
   };
 
-  localStorage.setItem(
-    "pendingOrder",
-    JSON.stringify(orderData)
-  );
+  // Records the order so it shows up in the admin dashboard/metrics and
+  // returns its id, or null if that failed. Used by both payment paths.
+  const createOrder = async (paymentMethod: "bank_transfer" | "squad"): Promise<string | null> => {
+    if (!isSupabaseConfigured || !supabase) return null;
 
-  // Record the order so it shows up in the admin dashboard/metrics. Best
-  // effort — a failure here (e.g. Supabase not configured) shouldn't block
-  // checkout, since the bank-transfer + WhatsApp flow is still the source
-  // of truth for actually fulfilling the order.
-  if (isSupabaseConfigured && supabase) {
     try {
       const { data: order, error: orderErr } = await supabase
         .from("orders")
@@ -107,35 +95,84 @@ export default function CartPage() {
           subtotal: orderTotal,
           delivery_fee: deliveryFee * 100,
           total: grandTotal,
-          payment_method: "bank_transfer",
+          payment_method: paymentMethod,
           status: "pending",
         })
         .select("id")
         .single();
 
-      if (!orderErr && order) {
-        const { error: itemsErr } = await supabase.from("order_items").insert(
-          cartItems.map((item) => ({
-            order_id: order.id,
-            product_id: item.product_id,
-            variant_id: item.id,
-            name: item.name,
-            size: item.size,
-            price: item.price,
-            quantity: item.quantity,
-          }))
-        );
-        if (!itemsErr) {
-          localStorage.setItem("pendingOrderId", order.id);
-        }
-      }
-    } catch (err) {
-      console.warn("Order recording failed (non-blocking):", err);
-    }
-  }
+      if (orderErr || !order) return null;
 
-  window.location.href = "/pay";
-};
+      const { error: itemsErr } = await supabase.from("order_items").insert(
+        cartItems.map((item) => ({
+          order_id: order.id,
+          product_id: item.product_id,
+          variant_id: item.id,
+          name: item.name,
+          size: item.size,
+          price: item.price,
+          quantity: item.quantity,
+        }))
+      );
+      if (itemsErr) return null;
+
+      localStorage.setItem("pendingOrderId", order.id);
+      return order.id;
+    } catch (err) {
+      console.warn("Order recording failed:", err);
+      return null;
+    }
+  };
+
+  const handleBankTransfer = async () => {
+    if (!validateForm()) return;
+    setPayingTransfer(true);
+
+    localStorage.setItem(
+      "pendingOrder",
+      JSON.stringify({ form, cartItems, subtotal: orderTotal, deliveryFee, total: grandTotal })
+    );
+
+    // Best-effort — a failure here shouldn't block checkout, since the
+    // bank-transfer + WhatsApp flow is still the source of truth either way.
+    await createOrder("bank_transfer");
+
+    window.location.href = "/pay";
+  };
+
+  const handlePayCard = async () => {
+    if (!validateForm()) return;
+    setPayingCard(true);
+
+    const orderId = await createOrder("squad");
+    if (!orderId) {
+      showToast("Couldn't start checkout — try bank transfer instead", "error");
+      setPayingCard(false);
+      return;
+    }
+
+    localStorage.setItem(
+      "pendingOrder",
+      JSON.stringify({ form, cartItems, subtotal: orderTotal, deliveryFee, total: grandTotal })
+    );
+
+    try {
+      const res = await fetch("/api/squad/initiate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId, email: form.email, amount: grandTotal, name: form.name }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.checkout_url) throw new Error(json.error ?? "Could not start card payment");
+      window.location.href = json.checkout_url;
+    } catch (err) {
+      showToast(
+        err instanceof Error ? err.message : "Card payment isn't available right now — try bank transfer",
+        "error"
+      );
+      setPayingCard(false);
+    }
+  };
 
   if (cartItems.length === 0) {
     return (
@@ -440,17 +477,25 @@ export default function CartPage() {
                 </div>
               </div>
 
-              {/* CHECKOUT BUTTON */}
+              {/* PAYMENT OPTIONS */}
               <button
-                onClick={handleCheckout}
-                disabled={loading}
+                onClick={handlePayCard}
+                disabled={payingCard || payingTransfer}
                 className={`w-full py-4 text-xs tracking-[0.25em] uppercase font-semibold rounded-xl transition-all duration-300 ${
-                  loading
+                  payingCard || payingTransfer
                     ? "bg-zinc-200 text-zinc-400 cursor-not-allowed"
                     : "bg-zinc-900 text-white hover:bg-zinc-700 shadow-lg shadow-zinc-900/10"
                 }`}
               >
-                {loading ? "Redirecting..." : "Proceed to payment"}
+                {payingCard ? "Redirecting to secure checkout..." : "Pay Now — Card / Bank / USSD"}
+              </button>
+
+              <button
+                onClick={handleBankTransfer}
+                disabled={payingCard || payingTransfer}
+                className="w-full py-3 text-[10px] tracking-[0.2em] uppercase text-zinc-500 hover:text-zinc-900 transition-colors disabled:opacity-50"
+              >
+                {payingTransfer ? "Redirecting..." : "Prefer bank transfer? Pay manually instead"}
               </button>
 
               <p className="text-zinc-400 text-[10px] tracking-wide text-center">
@@ -481,20 +526,29 @@ export default function CartPage() {
           </span>
         </div>
         <button
-          onClick={step === "bag" ? () => setStep("delivery") : handleCheckout}
-          disabled={loading}
+          onClick={step === "bag" ? () => setStep("delivery") : handlePayCard}
+          disabled={payingCard || payingTransfer}
           className={`w-full py-4 text-xs tracking-[0.25em] uppercase font-semibold rounded-xl transition-all ${
-            loading
+            payingCard || payingTransfer
               ? "bg-zinc-200 text-zinc-400 cursor-not-allowed"
               : "bg-zinc-900 text-white hover:bg-zinc-700"
           }`}
         >
-          {loading
-            ? "Redirecting..."
-            : step === "bag"
+          {step === "bag"
             ? "Continue to Delivery"
-            : "Pay with Paystack"}
+            : payingCard
+            ? "Redirecting..."
+            : "Pay Now"}
         </button>
+        {step === "delivery" && (
+          <button
+            onClick={handleBankTransfer}
+            disabled={payingCard || payingTransfer}
+            className="w-full mt-2 py-2 text-[10px] tracking-[0.15em] uppercase text-zinc-500 disabled:opacity-50"
+          >
+            {payingTransfer ? "Redirecting..." : "Or pay via bank transfer"}
+          </button>
+        )}
       </div>
 
     </div>

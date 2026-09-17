@@ -28,7 +28,9 @@ type Product = {
   is_featured: boolean;
   price: number;
   category_id: string;
-  categories: Category[] | null;
+  // products.category_id -> categories.id is many-to-one, so PostgREST
+  // embeds it as a single object, not an array.
+  categories: Category | null;
   variants: Variant[];
 };
 
@@ -89,7 +91,15 @@ export default function LandingPage() {
         return;
       }
 
-      setProducts(data ?? []);
+      // supabase-js's loose inference types embeds as arrays regardless of
+      // FK direction; at runtime this one is an object (many-to-one).
+      // Normalize defensively rather than trust either shape blindly.
+      setProducts(
+        (data ?? []).map((p) => ({
+          ...p,
+          categories: Array.isArray(p.categories) ? p.categories[0] ?? null : p.categories,
+        }))
+      );
       setLoading(false);
     }
 
@@ -112,7 +122,7 @@ export default function LandingPage() {
         ? products
         : activeFilter === "NEW"
         ? products.filter((p) => p.is_featured)
-        : products.filter((p) => p.categories?.[0]?.name === activeFilter);
+        : products.filter((p) => p.categories?.name === activeFilter);
 
     if (search.trim()) {
       const q = search.trim().toLowerCase();
@@ -523,7 +533,7 @@ export default function LandingPage() {
                       </p>
                     </Link>
                     <p className="text-[10px] text-zinc-500 mt-0.5 tracking-wide">
-                      {product.categories?.[0]?.name ?? "EXILES"}
+                      {product.categories?.name ?? "EXILES"}
                     </p>
                   </div>
 

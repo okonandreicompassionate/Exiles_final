@@ -29,7 +29,9 @@ type Product = {
   description: string;
   image_url: string;
   price: number;
-  categories: { name: string }[] | null;
+  // products.category_id -> categories.id is many-to-one, so PostgREST
+  // embeds it as a single object, not an array.
+  categories: { name: string } | null;
   variants: Variant[];
   product_images: ProductImage[];
 };
@@ -81,7 +83,12 @@ export default function ProductPage() {
         (a, b) => a.position - b.position
       );
 
-      setProduct({ ...data, product_images: sorted });
+      // supabase-js's loose inference types embeds as arrays regardless of
+      // FK direction; at runtime this one is an object (many-to-one).
+      // Normalize defensively rather than trust either shape blindly.
+      const categories = Array.isArray(data.categories) ? data.categories[0] ?? null : data.categories;
+
+      setProduct({ ...data, categories, product_images: sorted });
       setMainImage(sorted[0]?.image_url ?? data.image_url);
       setLoading(false);
     }
@@ -220,7 +227,7 @@ export default function ProductPage() {
         <div className="flex items-center gap-2 text-[10px] tracking-widest uppercase text-zinc-400">
           <Link href="/shop" className="hover:text-zinc-700 transition-colors">Shop</Link>
           <ChevronRight size={10} />
-          <span className="text-zinc-500">{product.categories?.[0]?.name ?? "Product"}</span>
+          <span className="text-zinc-500">{product.categories?.name ?? "Product"}</span>
           <ChevronRight size={10} />
           <span className="text-zinc-600 truncate max-w-[200px]">{product.name}</span>
         </div>
@@ -300,7 +307,7 @@ export default function ProductPage() {
             {/* CATEGORY + NAME + PRICE */}
             <div>
               <p className="text-[10px] tracking-[0.4em] uppercase text-zinc-500 mb-2">
-                {product.categories?.[0]?.name ?? "EXILES"}
+                {product.categories?.name ?? "EXILES"}
               </p>
               <h1 className="text-2xl sm:text-3xl font-light leading-snug text-zinc-900">
                 {product.name}
