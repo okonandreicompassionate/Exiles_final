@@ -6,6 +6,7 @@ import { ArrowLeft, ShoppingBag, Truck, ChevronDown } from "lucide-react";
 import { useCart } from "../components/cartProvider";
 import { useToast } from "../components/toastProvider";
 import { Logo } from "../components/Logo";
+import { supabase, isSupabaseConfigured } from "../../lib/supabase";
 
 const NIGERIAN_STATES = [
   "Abia", "Adamawa", "Akwa Ibom", "Anambra", "Bauchi", "Bayelsa",
@@ -86,6 +87,52 @@ export default function CartPage() {
     "pendingOrder",
     JSON.stringify(orderData)
   );
+
+  // Record the order so it shows up in the admin dashboard/metrics. Best
+  // effort — a failure here (e.g. Supabase not configured) shouldn't block
+  // checkout, since the bank-transfer + WhatsApp flow is still the source
+  // of truth for actually fulfilling the order.
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { data: order, error: orderErr } = await supabase
+        .from("orders")
+        .insert({
+          customer_name: form.name,
+          customer_email: form.email,
+          customer_phone: form.phone,
+          customer_whatsapp: form.whatsapp || null,
+          address: form.address,
+          city: form.city || null,
+          state: form.state,
+          subtotal: orderTotal,
+          delivery_fee: deliveryFee * 100,
+          total: grandTotal,
+          payment_method: "bank_transfer",
+          status: "pending",
+        })
+        .select("id")
+        .single();
+
+      if (!orderErr && order) {
+        const { error: itemsErr } = await supabase.from("order_items").insert(
+          cartItems.map((item) => ({
+            order_id: order.id,
+            product_id: item.product_id,
+            variant_id: item.id,
+            name: item.name,
+            size: item.size,
+            price: item.price,
+            quantity: item.quantity,
+          }))
+        );
+        if (!itemsErr) {
+          localStorage.setItem("pendingOrderId", order.id);
+        }
+      }
+    } catch (err) {
+      console.warn("Order recording failed (non-blocking):", err);
+    }
+  }
 
   window.location.href = "/pay";
 };

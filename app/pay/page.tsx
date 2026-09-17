@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Copy, CheckCircle2 } from "lucide-react";
 import { useToast } from "../components/toastProvider";
+import { supabase, isSupabaseConfigured } from "../../lib/supabase";
 
 export default function PayPage() {
   const [order, setOrder] = useState<any>(null);
@@ -37,6 +38,16 @@ export default function PayPage() {
       </div>
     );
   }
+
+  const markPaymentClaimed = () => {
+    const orderId = localStorage.getItem("pendingOrderId");
+    if (!orderId || !isSupabaseConfigured || !supabase) return;
+    // Best-effort — the WhatsApp proof is still what the admin actually
+    // confirms against before fulfilling. This just gets it out of "pending".
+    supabase.from("orders").update({ status: "paid" }).eq("id", orderId).then(({ error }) => {
+      if (error) console.warn("Order status update failed (non-blocking):", error.message);
+    });
+  };
 
   const whatsappMessage = encodeURIComponent(`
 NEW ORDER - EXILES
@@ -135,6 +146,7 @@ I have completed payment.
           <a
             href={`https://wa.me/2347058077794?text=${whatsappMessage}`}
             target="_blank"
+            onClick={markPaymentClaimed}
             className="block w-full text-center py-4 bg-zinc-900 text-white rounded-2xl font-semibold tracking-[0.2em] uppercase text-xs hover:bg-zinc-700 transition-colors"
           >
             I’ve Made Payment

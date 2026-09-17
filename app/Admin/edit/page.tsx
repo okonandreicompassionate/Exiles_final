@@ -6,6 +6,7 @@ import { supabase, isSupabaseConfigured } from "../../../lib/supabase";
 import { Trash2, Plus, CheckCircle, X, ChevronDown, ChevronUp } from "lucide-react";
 import { useToast } from "../../components/toastProvider";
 import { Logo } from "../../components/Logo";
+import { ImageUploadField } from "../../components/ImageUploadField";
 
 const ALL_SIZES = ["XS", "S", "M", "L", "XL", "XXL"];
 
@@ -601,22 +602,11 @@ export default function EditProductsPage() {
                         <p className="text-[10px] tracking-[0.4em] uppercase text-amber-700 font-medium mb-3">
                           Main Image
                         </p>
-                        <input
-                          type="text"
-                          placeholder="https://... main image URL"
+                        <ImageUploadField
                           value={ed.image_url}
-                          onChange={(e) => updateField(product.id, "image_url", e.target.value)}
-                          className={inputClass}
+                          onChange={(url) => updateField(product.id, "image_url", url)}
+                          previewClassName="h-40"
                         />
-                        {ed.image_url && (
-                          <div className="mt-3 h-40 rounded-xl overflow-hidden glass">
-                            <img
-                              src={ed.image_url}
-                              alt="Preview"
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                        )}
                       </div>
 
                       <div>
@@ -634,23 +624,13 @@ export default function EditProductsPage() {
                         <div className="space-y-2">
                           {ed.product_images.map((img, idx) => (
                             <div key={idx} className="flex gap-2 items-start">
-                              <div className="flex-1 space-y-1">
-                                <input
-                                  type="text"
-                                  placeholder={`Image ${idx + 1} URL`}
+                              <div className="flex-1">
+                                <ImageUploadField
                                   value={img.image_url}
-                                  onChange={(e) => updateImageUrl(product.id, idx, e.target.value)}
-                                  className={inputClass}
+                                  onChange={(url) => updateImageUrl(product.id, idx, url)}
+                                  placeholder={`Image ${idx + 1} — upload or paste a URL`}
+                                  previewClassName="h-20"
                                 />
-                                {img.image_url && (
-                                  <div className="h-20 rounded-xl overflow-hidden glass">
-                                    <img
-                                      src={img.image_url}
-                                      alt=""
-                                      className="w-full h-full object-cover"
-                                    />
-                                  </div>
-                                )}
                               </div>
                               <button
                                 onClick={() => removeImageSlot(product.id, idx)}
@@ -660,12 +640,6 @@ export default function EditProductsPage() {
                               </button>
                             </div>
                           ))}
-                        </div>
-
-                        <div className="mt-4 px-4 py-3 glass rounded-xl">
-                          <p className="text-[10px] text-zinc-500 leading-relaxed">
-                            💡 Upload at <span className="text-zinc-700">imgur.com</span> → right click → Copy Image Address → paste above
-                          </p>
                         </div>
                       </div>
                     </div>

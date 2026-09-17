@@ -6,6 +6,7 @@ import { supabase, isSupabaseConfigured } from "../../lib/supabase";
 import { Plus, Trash2, CheckCircle, LogOut, ShieldCheck, UserPlus, X } from "lucide-react";
 import { useToast } from "../components/toastProvider";
 import { Logo } from "../components/Logo";
+import { ImageUploadField } from "../components/ImageUploadField";
 
 type Category = { id: string; name: string; slug: string };
 type SizeRow = { size: string; stock: number };
@@ -685,26 +686,11 @@ export default function AdminPage() {
               <p className="text-[10px] tracking-[0.4em] uppercase text-amber-700 font-medium mb-4">
                 Main Image (Shop Grid)
               </p>
-              <input
-                type="text"
-                name="image_url"
-                placeholder="https://... paste image URL *"
+              <ImageUploadField
                 value={form.image_url}
-                onChange={handleFormChange}
-                className={inputClass}
+                onChange={(url) => setForm((f) => ({ ...f, image_url: url }))}
+                placeholder="Upload from your device, or paste an image URL *"
               />
-              {form.image_url && (
-                <div className="mt-3 aspect-[3/4] rounded-xl overflow-hidden glass">
-                  <img
-                    src={form.image_url}
-                    alt="Preview"
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = "none";
-                    }}
-                  />
-                </div>
-              )}
             </div>
 
             {/* EXTRA IMAGES */}
@@ -725,26 +711,13 @@ export default function AdminPage() {
               <div className="space-y-3">
                 {images.map((url, idx) => (
                   <div key={idx} className="flex gap-2 items-start">
-                    <div className="flex-1 space-y-2">
-                      <input
-                        type="text"
-                        placeholder={`Image ${idx + 1} URL`}
+                    <div className="flex-1">
+                      <ImageUploadField
                         value={url}
-                        onChange={(e) => handleImageChange(idx, e.target.value)}
-                        className={inputClass}
+                        onChange={(v) => handleImageChange(idx, v)}
+                        placeholder={`Image ${idx + 1} — upload or paste a URL`}
+                        previewClassName="h-24"
                       />
-                      {url && (
-                        <div className="h-24 rounded-xl overflow-hidden glass">
-                          <img
-                            src={url}
-                            alt={`Preview ${idx + 1}`}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).style.display = "none";
-                            }}
-                          />
-                        </div>
-                      )}
                     </div>
                     <button
                       onClick={() => removeImageSlot(idx)}
@@ -754,13 +727,6 @@ export default function AdminPage() {
                     </button>
                   </div>
                 ))}
-              </div>
-
-              {/* IMGUR TIP */}
-              <div className="mt-4 px-4 py-3 glass rounded-xl">
-                <p className="text-[10px] text-zinc-500 leading-relaxed">
-                  💡 Upload photos at <span className="text-zinc-700">imgur.com</span> → right click image → Copy Image Address → paste above
-                </p>
               </div>
             </div>
 
