@@ -46,6 +46,27 @@ export default function EditProductsPage() {
   const [saved, setSaved] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
 
+  // Verified server-side via the service-role key (bypasses RLS entirely) —
+  // the same path the /api/admin/* routes use. Surfaces the real error (e.g.
+  // a missing SUPABASE_SERVICE_ROLE_KEY on this deployment) instead of
+  // masking every failure as "not an admin".
+  async function fetchMyAdminRow(
+    accessToken: string
+  ): Promise<{ admin: { role: string; email: string } | null; error: string | null }> {
+    try {
+      const res = await fetch("/api/admin/me", {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        return { admin: null, error: json.error ?? `Request failed (${res.status})` };
+      }
+      return { admin: json.admin ?? null, error: null };
+    } catch (err) {
+      return { admin: null, error: err instanceof Error ? err.message : "Network error" };
+    }
+  }
+
   // ── SESSION BOOTSTRAP ──
   useEffect(() => {
     async function bootstrap() {
@@ -55,18 +76,21 @@ export default function EditProductsPage() {
       }
 
       const { data: sessionData } = await supabase.auth.getSession();
-      const user = sessionData.session?.user;
+      const token = sessionData.session?.access_token;
 
-      if (!user) {
+      if (!token) {
         setCheckingSession(false);
         return;
       }
 
-      const { data: adminRow } = await supabase.from("admins").select("id").eq("id", user.id).single();
+      const { admin: adminRow, error: adminErr } = await fetchMyAdminRow(token);
 
       if (adminRow) {
         setAuthed(true);
       } else {
+        if (adminErr && adminErr !== "Not an admin") {
+          showToast(`Admin check failed: ${adminErr}`, "error");
+        }
         await supabase.auth.signOut();
       }
 
@@ -92,17 +116,20 @@ export default function EditProductsPage() {
       password: loginPassword,
     });
 
-    if (error || !data.user) {
+    if (error || !data.user || !data.session) {
       showToast(error?.message ?? "Login failed", "error");
       setLoginLoading(false);
       return;
     }
 
-    const { data: adminRow } = await supabase.from("admins").select("id").eq("id", data.user.id).single();
+    const { admin: adminRow, error: adminErr } = await fetchMyAdminRow(data.session.access_token);
 
     if (!adminRow) {
       await supabase.auth.signOut();
-      showToast("This account is not an admin", "error");
+      showToast(
+        adminErr && adminErr !== "Not an admin" ? `Admin check failed: ${adminErr}` : "This account is not an admin",
+        "error"
+      );
       setLoginLoading(false);
       return;
     }
