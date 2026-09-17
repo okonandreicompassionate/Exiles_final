@@ -97,19 +97,18 @@ create policy "product_images_admin_write" on product_images for all
   using (exists (select 1 from admins where admins.id = auth.uid()))
   with check (exists (select 1 from admins where admins.id = auth.uid()));
 
--- Admins table: a signed-in admin can see their own row, and the "god" role
--- can see every row (needed for the admin-management screen). Nobody writes
--- to this table directly from the browser — creating/removing admins goes
--- through the server-side /api/admin/* routes using the service-role key,
--- which bypasses RLS entirely. That's why there are no insert/update/delete
--- policies below: the default is deny, which is what we want for the
--- anon/authenticated roles.
+-- Admins table: a signed-in admin can see their own row. The "god" role's
+-- ability to see EVERY admin (for the admin-management screen) is handled
+-- by /api/admin/list-admins using the service-role key, not RLS — checking
+-- "is this user a god" by querying `admins` from inside a policy defined ON
+-- `admins` recurses forever (Postgres re-runs that same policy for the
+-- inner query). Nobody writes to this table directly from the browser
+-- either way — creating/removing admins goes through the server-side
+-- /api/admin/* routes, which bypass RLS entirely.
 drop policy if exists "admins_self_or_god_read" on admins;
-create policy "admins_self_or_god_read" on admins for select
-  using (
-    id = auth.uid()
-    or exists (select 1 from admins me where me.id = auth.uid() and me.role = 'god')
-  );
+drop policy if exists "admins_self_read" on admins;
+create policy "admins_self_read" on admins for select
+  using (id = auth.uid());
 
 -- ============================================================================
 -- SEED CATEGORIES (safe to re-run — ON CONFLICT no-ops if they already exist)

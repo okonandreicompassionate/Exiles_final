@@ -392,6 +392,12 @@ export default function EditProductsPage() {
           </div>
           <div className="flex items-center gap-4">
             <button
+              onClick={() => router.push("/Admin/dashboard")}
+              className="text-xs tracking-widest uppercase text-zinc-500 hover:text-zinc-900 transition-colors"
+            >
+              Dashboard
+            </button>
+            <button
               onClick={() => router.push("/Admin")}
               className="text-xs tracking-widest uppercase text-zinc-500 hover:text-zinc-900 transition-colors"
             >

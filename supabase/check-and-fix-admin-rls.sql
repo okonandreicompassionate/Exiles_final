@@ -18,11 +18,13 @@ where relname = 'admins';
 -- This block is safe to re-run regardless — it (re)creates the policy.
 -- ============================================================================
 
+-- NOTE: an earlier version of this file created a policy that queried
+-- `admins` from inside a policy on `admins` itself — that recurses forever
+-- ("infinite recursion detected in policy for relation admins"). Fixed below.
+
 alter table admins enable row level security;
 
 drop policy if exists "admins_self_or_god_read" on admins;
-create policy "admins_self_or_god_read" on admins for select
-  using (
-    id = auth.uid()
-    or exists (select 1 from admins me where me.id = auth.uid() and me.role = 'god')
-  );
+drop policy if exists "admins_self_read" on admins;
+create policy "admins_self_read" on admins for select
+  using (id = auth.uid());
