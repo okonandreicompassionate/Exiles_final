@@ -72,7 +72,7 @@ const inputClass =
   "w-full glass-input text-zinc-900 text-sm px-4 py-3.5 rounded-xl outline-none transition-colors placeholder-zinc-400";
 
 export default function CartPage() {
-  const { cartItems, removeFromCart, updateQuantity } = useCart();
+  const { cartItems, removeFromCart, updateQuantity, clearCart } = useCart();
   const { showToast } = useToast();
   const [payingCard, setPayingCard] = useState(false);
   const [payingTransfer, setPayingTransfer] = useState(false);
@@ -196,9 +196,13 @@ export default function CartPage() {
       }),
     );
 
-    // Best-effort — a failure here shouldn't block checkout, since the
-    // bank-transfer + WhatsApp flow is still the source of truth either way.
-    await createOrder("bank_transfer");
+    const orderId = await createOrder("bank_transfer");
+    if (!orderId) {
+      setPayingTransfer(false);
+      return;
+    }
+
+    clearCart();
 
     window.location.href = "/pay";
   };

@@ -4,12 +4,14 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Copy, CheckCircle2 } from "lucide-react";
 import { useToast } from "../components/toastProvider";
+import { useCart } from "../components/cartProvider";
 import { supabase, isSupabaseConfigured } from "../../lib/supabase";
 
 export default function PayPage() {
   const [order, setOrder] = useState<any>(null);
   const [copied, setCopied] = useState(false);
   const { showToast } = useToast();
+  const { clearCart } = useCart();
 
   useEffect(() => {
     const savedOrder = localStorage.getItem("pendingOrder");
@@ -44,6 +46,8 @@ export default function PayPage() {
   const markPaymentClaimed = () => {
     const orderId = localStorage.getItem("pendingOrderId");
     if (!orderId || !isSupabaseConfigured || !supabase) return;
+    clearCart();
+    localStorage.removeItem("pendingOrder");
     // Best-effort — the WhatsApp proof is still what the admin actually
     // confirms against before fulfilling. This just gets it out of "pending".
     supabase
@@ -159,7 +163,7 @@ I have completed payment.
           </div>
 
           <a
-            href={`https://wa.me/2347058077794?text=${whatsappMessage}`}
+            href={`https://wa.me/2347071879241?text=${whatsappMessage}`}
             target="_blank"
             onClick={markPaymentClaimed}
             className="block w-full text-center py-4 bg-zinc-900 text-white rounded-2xl font-semibold tracking-[0.2em] uppercase text-xs hover:bg-zinc-700 transition-colors"
