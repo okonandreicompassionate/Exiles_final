@@ -37,6 +37,12 @@ type Product = {
   product_images: ProductImage[];
 };
 
+const THREE_XL_SURCHARGE = 500000;
+
+function priceForSize(price: number, size?: string) {
+  return price + (size === "3XL" ? THREE_XL_SURCHARGE : 0);
+}
+
 export default function ProductPage() {
   const params = useParams();
   const router = useRouter();
@@ -125,7 +131,7 @@ export default function ProductPage() {
       image_url: product.image_url,
       size: selectedVariant.size,
       color: selectedColor,
-      price: product.price,
+      price: priceForSize(product.price, selectedVariant.size),
       quantity: 1,
     });
 
@@ -325,7 +331,8 @@ export default function ProductPage() {
               </h1>
               <div className="flex items-baseline gap-3 mt-3">
                 <p className="text-2xl font-semibold text-zinc-900">
-                  ₦{(product.price / 100).toLocaleString()}
+                  ₦{(priceForSize(product.price, selectedVariant?.size) / 100).toLocaleString()}
+                  {selectedVariant?.size === "3XL" && <span className="text-xs text-amber-700 ml-2">3XL +₦5,000</span>}
                 </p>
               </div>
             </div>
@@ -397,7 +404,8 @@ export default function ProductPage() {
                           : "glass text-zinc-600 hover:border-zinc-900/30 hover:text-zinc-900"
                       }`}
                     >
-                      {variant.size}
+                      <span>{variant.size}</span>
+                      {variant.size === "3XL" && <span className="absolute -bottom-4 left-1/2 -translate-x-1/2 whitespace-nowrap text-[8px] text-amber-700">+₦5K</span>}
                       {outOfStock && (
                         <span className="absolute inset-0 flex items-center justify-center">
                           <span className="w-8 h-px bg-zinc-300 rotate-45 absolute" />
@@ -510,7 +518,7 @@ export default function ProductPage() {
             ? "Select a Color"
             : !selectedVariant
             ? "Select a Size"
-            : `Add to Bag — ₦${(product.price / 100).toLocaleString()}`}
+            : `Add to Bag — ₦${(priceForSize(product.price, selectedVariant?.size) / 100).toLocaleString()}`}
         </button>
       </div>
 

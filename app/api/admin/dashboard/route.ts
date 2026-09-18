@@ -88,7 +88,7 @@ export async function GET(req: NextRequest) {
   const { data: orderRows, error: ordersErr } = await db
     .from("orders")
     .select(
-      "id, customer_name, customer_phone, state, status, total, created_at, order_items(name, size, color, quantity, price)",
+      "id, order_code, customer_name, customer_email, customer_phone, customer_whatsapp, address, city, state, subtotal, delivery_fee, total, payment_method, gateway_reference, status, created_at, order_items(name, size, color, quantity, price)",
     )
     .order("created_at", { ascending: false })
     .limit(100);
@@ -99,9 +99,18 @@ export async function GET(req: NextRequest) {
 
   const orders = (orderRows ?? []).map((o) => ({
     id: o.id as string,
+    orderCode: o.order_code as string,
     customerName: o.customer_name as string,
+    customerEmail: o.customer_email as string,
     customerPhone: o.customer_phone as string,
+    customerWhatsapp: o.customer_whatsapp as string | null,
+    address: o.address as string,
+    city: o.city as string | null,
     state: o.state as string,
+    subtotal: o.subtotal as number,
+    deliveryFee: o.delivery_fee as number,
+    paymentMethod: o.payment_method as string,
+    gatewayReference: o.gateway_reference as string | null,
     status: o.status as string,
     createdAt: o.created_at as string,
     items: (
@@ -110,12 +119,14 @@ export async function GET(req: NextRequest) {
         size: string | null;
         color: string | null;
         quantity: number;
+        price: number;
       }[]) ?? []
     ).map((item) => ({
       name: item.name,
       size: item.size,
       color: item.color,
       quantity: item.quantity,
+      price: item.price,
     })),
     itemCount: ((o.order_items as { quantity: number }[]) ?? []).reduce(
       (sum, i) => sum + i.quantity,

@@ -17,7 +17,7 @@ import { ImageUploadField } from "../../components/ImageUploadField";
 import { ColorsEditor } from "../../components/ColorsEditor";
 import { AdminNav } from "../AdminNav";
 
-const ALL_SIZES = ["XS", "S", "M", "L", "XL", "XXL"];
+const ALL_SIZES = ["XS", "S", "M", "L", "XL", "XXL", "3XL"];
 
 const inputClass =
   "w-full glass-input text-zinc-900 text-sm px-4 py-3 rounded-xl outline-none transition-colors placeholder-zinc-400";
@@ -664,7 +664,8 @@ export default function EditProductsPage() {
                                     : "glass text-zinc-500 hover:text-zinc-900"
                                 }`}
                               >
-                                {size}
+                                <span>{size}</span>
+                                {size === "3XL" && <span className="text-[8px]">+₦5K</span>}
                               </button>
                             );
                           })}

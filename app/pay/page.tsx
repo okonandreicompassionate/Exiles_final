@@ -22,7 +22,7 @@ export default function PayPage() {
   }, []);
 
   const copyAccount = async () => {
-    await navigator.clipboard.writeText("7058077794");
+    await navigator.clipboard.writeText("80828268947");
 
     setCopied(true);
     showToast("Account number copied", "success");
@@ -67,6 +67,7 @@ export default function PayPage() {
 NEW ORDER - EXILES
 
 Name: ${order.form.name}
+Order code: ${order.orderCode ?? "Pending"}
 Phone: ${order.form.phone}
 State: ${order.form.state}
 
@@ -86,7 +87,13 @@ I have completed payment.
             Complete Payment
           </p>
 
-          <h1 className="text-3xl font-bold">Bank Transfer</h1>
+          <h1 className="text-3xl font-bold">Pay Directly by Transfer</h1>
+          <p className="mt-2 text-sm text-zinc-600 leading-relaxed">
+            Transfer the exact total below, then tap the button to send your payment proof on WhatsApp.
+          </p>
+          <p className="mt-2 text-sm text-amber-700 font-semibold tracking-wide">
+            Order code: {order.orderCode ?? "Pending"}
+          </p>
         </div>
 
         <div className="glass-strong rounded-3xl p-6 space-y-6">
@@ -126,7 +133,7 @@ I have completed payment.
                 Bank
               </p>
 
-              <p className="text-lg font-medium">PalmPay</p>
+              <p className="text-lg font-bold tracking-wide">PALMPAY</p>
             </div>
 
             <div>
@@ -135,8 +142,8 @@ I have completed payment.
               </p>
 
               <div className="flex items-center justify-between glass rounded-2xl px-4 py-4">
-                <span className="text-xl font-bold tracking-wider">
-                  7058077794
+                  <span className="text-xl font-bold tracking-wider">
+                    80828268947
                 </span>
 
                 <button
@@ -158,7 +165,7 @@ I have completed payment.
                 Account Name
               </p>
 
-              <p className="text-lg font-medium">Ola Okon</p>
+              <p className="text-lg font-bold">Tolu aina</p>
             </div>
           </div>
 

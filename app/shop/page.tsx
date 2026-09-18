@@ -47,6 +47,8 @@ type Product = {
 
 type SortOption = "newest" | "price-asc" | "price-desc";
 
+const THREE_XL_SURCHARGE = 500000;
+
 export const CATEGORIES = [
   { name: "ALL", label: "All", icon: FiGrid },
   { name: "NEW", label: "New Drops", icon: FiStar },
@@ -174,7 +176,7 @@ export default function LandingPage() {
       name: product.name,
       image_url: product.image_url,
       size: defaultVariant.size,
-      price: product.price,
+      price: product.price + (defaultVariant.size === "3XL" ? THREE_XL_SURCHARGE : 0),
       quantity: 1,
     });
 

@@ -119,7 +119,7 @@ export default function CartPage() {
   // returns its id, or null if that failed. Used by both payment paths.
   const createOrder = async (
     paymentMethod: "bank_transfer" | "squad",
-  ): Promise<string | null> => {
+  ): Promise<{ id: string; orderCode: string } | null> => {
     if (!isSupabaseConfigured || !supabase) {
       showToast("Supabase is not configured", "error");
       return null;
@@ -174,7 +174,7 @@ export default function CartPage() {
           payment_method: paymentMethod,
           status: "pending",
         })
-        .select("id")
+        .select("id, order_code")
         .single();
 
       if (orderErr || !order) {
@@ -205,7 +205,7 @@ export default function CartPage() {
       }
 
       localStorage.setItem("pendingOrderId", order.id);
-      return order.id;
+      return { id: order.id, orderCode: order.order_code };
     } catch (err) {
       console.warn("Order recording failed:", err);
       showToast("Order recording failed. Check the database setup.", "error");
@@ -228,25 +228,9 @@ export default function CartPage() {
       }),
     );
 
-    const orderId = await createOrder("bank_transfer");
-    if (!orderId) {
+    const createdOrder = await createOrder("bank_transfer");
+    if (!createdOrder) {
       setPayingTransfer(false);
-      return;
-    }
-
-    clearCart();
-
-    window.location.href = "/pay";
-  };
-
-  const handlePayCard = async () => {
-    if (!validateForm()) return;
-    setPayingCard(true);
-
-    const orderId = await createOrder("squad");
-    if (!orderId) {
-      showToast("Couldn't start checkout — try bank transfer instead", "error");
-      setPayingCard(false);
       return;
     }
 
@@ -258,6 +242,37 @@ export default function CartPage() {
         subtotal: orderTotal,
         deliveryFee,
         total: grandTotal,
+        orderCode: createdOrder.orderCode,
+      }),
+    );
+
+    clearCart();
+
+    window.location.href = "/pay";
+  };
+
+  const handlePayCard = async () => {
+    if (!validateForm()) return;
+    setPayingCard(true);
+
+    const createdOrder = await createOrder("squad");
+    if (!createdOrder) {
+      showToast("Couldn't start checkout — try bank transfer instead", "error");
+      setPayingCard(false);
+      return;
+    }
+
+    const orderId = createdOrder.id;
+
+    localStorage.setItem(
+      "pendingOrder",
+      JSON.stringify({
+        form,
+        cartItems,
+        subtotal: orderTotal,
+        deliveryFee,
+        total: grandTotal,
+        orderCode: createdOrder.orderCode,
       }),
     );
 
@@ -388,7 +403,7 @@ export default function CartPage() {
                               {item.name}
                             </h2>
                             <p className="text-zinc-500 text-xs mt-0.5">
-                              Size {item.size}
+                              Size {item.size}{item.size === "3XL" ? " · +₦5,000" : ""}
                               {item.color ? ` · Color ${item.color}` : ""}
                             </p>
                           </div>

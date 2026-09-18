@@ -19,6 +19,7 @@ import {
   LayoutGrid,
   LineChart,
   MapPin,
+  X,
 } from "lucide-react";
 
 const inputClass =
@@ -45,9 +46,18 @@ type StockCategoryAgg = {
 };
 type OrderRow = {
   id: string;
+  orderCode: string;
   customerName: string;
+  customerEmail: string;
   customerPhone: string;
+  customerWhatsapp: string | null;
+  address: string;
+  city: string | null;
   state: string;
+  subtotal: number;
+  deliveryFee: number;
+  paymentMethod: string;
+  gatewayReference: string | null;
   status: "pending" | "paid" | "fulfilled" | "cancelled";
   createdAt: string;
   itemCount: number;
@@ -56,6 +66,7 @@ type OrderRow = {
     size: string | null;
     color: string | null;
     quantity: number;
+    price: number;
   }[];
   total: number;
 };
@@ -128,6 +139,8 @@ export default function AdminDashboardPage() {
   const [stockStatusFilter, setStockStatusFilter] =
     useState<(typeof STOCK_FILTERS)[number]["key"]>("all");
   const [search, setSearch] = useState("");
+  const [orderSearch, setOrderSearch] = useState("");
+  const [selectedOrder, setSelectedOrder] = useState<OrderRow | null>(null);
   const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
 
   async function authHeader(): Promise<Record<string, string>> {
@@ -247,6 +260,18 @@ export default function AdminDashboardPage() {
     }
     setUpdatingOrderId(null);
   }
+
+  const visibleOrders = (data?.orders.recent ?? []).filter((order) => {
+    const query = orderSearch.trim().toLowerCase();
+    if (!query) return true;
+    return [
+      order.orderCode,
+      order.customerName,
+      order.customerEmail,
+      order.customerPhone,
+      order.state,
+    ].some((value) => value?.toLowerCase().includes(query));
+  });
 
   const filteredProducts = useMemo(() => {
     if (!data) return [];
@@ -887,9 +912,21 @@ export default function AdminDashboardPage() {
 
             {/* ── RECENT ORDERS ── */}
             <div id="orders" className="scroll-mt-28">
-              <p className="text-[10px] tracking-[0.4em] uppercase text-amber-700 font-medium mb-4">
-                Recent Orders
-              </p>
+              <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-4">
+                <div>
+                  <p className="text-[10px] tracking-[0.4em] uppercase text-amber-700 font-medium">
+                    Recent Orders
+                  </p>
+                  <p className="text-xs text-zinc-400 mt-1">Search by order code, name, phone, or state. Click any order for full details.</p>
+                </div>
+                <input
+                  type="search"
+                  value={orderSearch}
+                  onChange={(e) => setOrderSearch(e.target.value)}
+                  placeholder="Search EX-..."
+                  className={`${inputClass} sm:w-64`}
+                />
+              </div>
               <div className="glass rounded-2xl overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
@@ -916,12 +953,14 @@ export default function AdminDashboardPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {data.orders.recent.map((o) => (
+                      {visibleOrders.map((o) => (
                         <tr
                           key={o.id}
-                          className="border-b border-zinc-900/5 last:border-0 hover:bg-zinc-900/[0.02]"
+                          onClick={() => setSelectedOrder(o)}
+                          className="border-b border-zinc-900/5 last:border-0 hover:bg-zinc-900/[0.02] cursor-pointer"
                         >
                           <td className="py-3 px-4">
+                            <p className="text-amber-700 text-[10px] font-semibold tracking-wider">{o.orderCode}</p>
                             <p className="text-zinc-800">{o.customerName}</p>
                             <p className="text-[10px] text-zinc-400">
                               {o.customerPhone}
@@ -957,6 +996,7 @@ export default function AdminDashboardPage() {
                           </td>
                           <td className="py-3 px-4 text-right">
                             <select
+                              onClick={(e) => e.stopPropagation()}
                               value={o.status}
                               disabled={updatingOrderId === o.id}
                               onChange={(e) =>
@@ -974,9 +1014,9 @@ export default function AdminDashboardPage() {
                       ))}
                     </tbody>
                   </table>
-                  {data.orders.recent.length === 0 && (
+                  {visibleOrders.length === 0 && (
                     <p className="text-center text-xs text-zinc-400 py-10">
-                      No orders yet.
+                      No matching orders.
                     </p>
                   )}
                 </div>
@@ -985,6 +1025,67 @@ export default function AdminDashboardPage() {
           </>
         )}
       </div>
+
+      {selectedOrder && (
+        <div className="fixed inset-0 z-[80] flex justify-end">
+          <button
+            type="button"
+            aria-label="Close order details"
+            onClick={() => setSelectedOrder(null)}
+            className="absolute inset-0 bg-zinc-950/25 backdrop-blur-sm"
+          />
+          <aside className="relative w-full max-w-lg h-full overflow-y-auto bg-white shadow-2xl p-6 sm:p-8">
+            <div className="flex items-start justify-between gap-4 border-b border-zinc-900/10 pb-5">
+              <div>
+                <p className="text-[10px] tracking-[0.3em] uppercase text-amber-700 font-semibold">Order details</p>
+                <h2 className="text-2xl font-semibold text-zinc-900 mt-1">{selectedOrder.orderCode}</h2>
+                <p className="text-xs text-zinc-400 mt-1">{new Date(selectedOrder.createdAt).toLocaleString()}</p>
+              </div>
+              <button type="button" onClick={() => setSelectedOrder(null)} className="p-2 text-zinc-400 hover:text-zinc-900" aria-label="Close">
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 py-5 text-sm">
+              <div><p className="text-[10px] uppercase tracking-widest text-zinc-400">Status</p><p className="mt-1 font-medium uppercase">{selectedOrder.status}</p></div>
+              <div><p className="text-[10px] uppercase tracking-widest text-zinc-400">Payment</p><p className="mt-1 font-medium uppercase">{selectedOrder.paymentMethod}</p></div>
+              <div className="col-span-2"><p className="text-[10px] uppercase tracking-widest text-zinc-400">Customer</p><p className="mt-1 font-medium">{selectedOrder.customerName}</p><p className="text-zinc-500">{selectedOrder.customerEmail}</p><p className="text-zinc-500">{selectedOrder.customerPhone}{selectedOrder.customerWhatsapp ? ` · WhatsApp ${selectedOrder.customerWhatsapp}` : ""}</p></div>
+              <div className="col-span-2"><p className="text-[10px] uppercase tracking-widest text-zinc-400">Delivery address</p><p className="mt-1 text-zinc-700">{selectedOrder.address}</p><p className="text-zinc-500">{selectedOrder.city ? `${selectedOrder.city}, ` : ""}{selectedOrder.state}</p></div>
+            </div>
+
+            <div className="border-y border-zinc-900/10 py-5 space-y-3">
+              <p className="text-[10px] uppercase tracking-widest text-zinc-400">Items</p>
+              {selectedOrder.items.map((item, index) => (
+                <div key={`${item.name}-${index}`} className="flex justify-between gap-4 text-sm">
+                  <span>{item.name} · {item.size ?? "One size"}{item.color ? ` · ${item.color}` : ""} ×{item.quantity}</span>
+                  <span className="font-medium">{naira(item.quantity * item.price)}</span>
+                </div>
+              ))}
+              <div className="flex justify-between pt-3 border-t border-zinc-900/10 font-semibold"><span>Total</span><span>{naira(selectedOrder.total)}</span></div>
+            </div>
+
+            <div className="pt-5 space-y-3">
+              <p className="text-[10px] uppercase tracking-widest text-zinc-400">Payment verification</p>
+              <p className="text-xs text-zinc-500">Confirm the transfer against this order code before marking the order paid or fulfilled.</p>
+              {selectedOrder.gatewayReference && <p className="text-xs font-mono text-zinc-600 break-all">Gateway: {selectedOrder.gatewayReference}</p>}
+              <select
+                value={selectedOrder.status}
+                disabled={updatingOrderId === selectedOrder.id}
+                onChange={async (e) => {
+                  await updateOrderStatus(selectedOrder.id, e.target.value);
+                  setSelectedOrder({ ...selectedOrder, status: e.target.value as OrderRow["status"] });
+                }}
+                className="w-full glass-input px-4 py-3 rounded-xl text-sm uppercase tracking-widest"
+              >
+                <option value="pending">Pending</option>
+                <option value="paid">Paid</option>
+                <option value="fulfilled">Fulfilled</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+            </div>
+          </aside>
+        </div>
+      )}
     </div>
   );
 }
