@@ -32,6 +32,7 @@ type Product = {
   // products.category_id -> categories.id is many-to-one, so PostgREST
   // embeds it as a single object, not an array.
   categories: { name: string } | null;
+  colors: string[];
   variants: Variant[];
   product_images: ProductImage[];
 };
@@ -45,6 +46,7 @@ export default function ProductPage() {
 
   const [product, setProduct] = useState<Product | null>(null);
   const [selectedVariant, setSelectedVariant] = useState<Variant | null>(null);
+  const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [mainImage, setMainImage] = useState("");
   const [activeThumb, setActiveThumb] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -66,6 +68,7 @@ export default function ProductPage() {
           description,
           image_url,
           price,
+          colors,
           categories ( name ),
           variants ( id, size, stock ),
           product_images ( id, image_url, position )
@@ -88,8 +91,12 @@ export default function ProductPage() {
       // Normalize defensively rather than trust either shape blindly.
       const categories = Array.isArray(data.categories) ? data.categories[0] ?? null : data.categories;
 
-      setProduct({ ...data, categories, product_images: sorted });
+      const colors = data.colors ?? [];
+
+      setProduct({ ...data, categories, colors, product_images: sorted });
       setMainImage(sorted[0]?.image_url ?? data.image_url);
+      // Nothing to choose if there's only one option.
+      if (colors.length === 1) setSelectedColor(colors[0]);
       setLoading(false);
     }
 
@@ -105,8 +112,11 @@ export default function ProductPage() {
     return () => window.removeEventListener("keydown", onKey);
   }, [lightboxOpen]);
 
+  const needsColor = (product?.colors.length ?? 0) > 0;
+  const readyToAdd = !!selectedVariant && (!needsColor || !!selectedColor);
+
   const handleAddToCart = () => {
-    if (!selectedVariant || !product) return;
+    if (!readyToAdd || !selectedVariant || !product) return;
 
     addToCart({
       id: selectedVariant.id,
@@ -114,6 +124,7 @@ export default function ProductPage() {
       name: product.name,
       image_url: product.image_url,
       size: selectedVariant.size,
+      color: selectedColor,
       price: product.price,
       quantity: 1,
     });
@@ -322,6 +333,39 @@ export default function ProductPage() {
             {/* DIVIDER */}
             <div className="border-t border-zinc-900/10" />
 
+            {/* COLOR SELECTOR */}
+            {needsColor && (
+              <div>
+                <p className="text-xs tracking-[0.2em] uppercase text-zinc-500 mb-3">
+                  Select Color
+                  {selectedColor && <span className="text-zinc-900 ml-2">— {selectedColor}</span>}
+                </p>
+                <div className="flex gap-2 flex-wrap">
+                  {product.colors.map((color) => {
+                    const isSelected = selectedColor === color;
+                    return (
+                      <button
+                        key={color}
+                        onClick={() => setSelectedColor(color)}
+                        title={color}
+                        className={`flex items-center gap-2 pl-2 pr-3.5 h-10 rounded-xl text-xs font-medium transition-all duration-300 ${
+                          isSelected
+                            ? "bg-zinc-900 text-white border-2 border-zinc-900 shadow-lg shadow-zinc-900/10"
+                            : "glass text-zinc-600 hover:border-zinc-900/30 hover:text-zinc-900"
+                        }`}
+                      >
+                        <span
+                          className="w-5 h-5 rounded-full border border-zinc-900/15 flex-shrink-0"
+                          style={{ backgroundColor: color.toLowerCase().replace(/\s+/g, "") }}
+                        />
+                        {color}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             {/* SIZE SELECTOR */}
             <div>
               <div className="flex items-center justify-between mb-3">
@@ -375,17 +419,19 @@ export default function ProductPage() {
             <div className="hidden lg:flex gap-3">
               <button
                 onClick={handleAddToCart}
-                disabled={!selectedVariant || added}
+                disabled={!readyToAdd || added}
                 className={`flex-1 py-4 rounded-2xl text-xs tracking-[0.3em] uppercase font-semibold transition-all duration-300 ${
                   added
                     ? "bg-emerald-600 text-white cursor-not-allowed"
-                    : !selectedVariant
+                    : !readyToAdd
                     ? "glass text-zinc-400 cursor-not-allowed"
                     : "bg-zinc-900 text-white hover:bg-zinc-700 shadow-lg shadow-zinc-900/10"
                 }`}
               >
                 {added
                   ? "✓ Added to Bag"
+                  : needsColor && !selectedColor
+                  ? "Select a Color"
                   : !selectedVariant
                   ? "Select a Size"
                   : "Add to Bag"}
@@ -449,17 +495,19 @@ export default function ProductPage() {
         </button>
         <button
           onClick={handleAddToCart}
-          disabled={!selectedVariant || added}
+          disabled={!readyToAdd || added}
           className={`flex-1 py-4 rounded-2xl text-xs tracking-[0.3em] uppercase font-semibold transition-all duration-300 ${
             added
               ? "bg-emerald-600 text-white cursor-not-allowed"
-              : !selectedVariant
+              : !readyToAdd
               ? "glass text-zinc-400 cursor-not-allowed"
               : "bg-zinc-900 text-white hover:bg-zinc-700 shadow-lg shadow-zinc-900/10"
           }`}
         >
           {added
             ? "✓ Added to Bag"
+            : needsColor && !selectedColor
+            ? "Select a Color"
             : !selectedVariant
             ? "Select a Size"
             : `Add to Bag — ₦${(product.price / 100).toLocaleString()}`}

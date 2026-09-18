@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useRef } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useCart } from "../components/cartProvider";
 import { useWishlist } from "../components/wishlistProvider";
@@ -31,6 +32,7 @@ type Product = {
   // products.category_id -> categories.id is many-to-one, so PostgREST
   // embeds it as a single object, not an array.
   categories: Category | null;
+  colors: string[];
   variants: Variant[];
 };
 
@@ -47,6 +49,7 @@ export const CATEGORIES = [
 ];
 
 export default function LandingPage() {
+  const router = useRouter();
   const [activeFilter, setActiveFilter] = useState("ALL");
   const [addedId, setAddedId] = useState<string | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
@@ -80,6 +83,7 @@ export default function LandingPage() {
           is_featured,
           price,
           category_id,
+          colors,
           categories ( name ),
           variants ( id, size, stock )
         `)
@@ -141,6 +145,13 @@ export default function LandingPage() {
 
     const defaultVariant = product.variants[0];
     if (!defaultVariant) return;
+
+    // Colors need an explicit pick — a silent default here is exactly the
+    // kind of order-confusion this feature exists to prevent.
+    if (product.colors.length > 0) {
+      router.push(`/product/${product.id}`);
+      return;
+    }
 
     addToCart({
       id: defaultVariant.id,
@@ -566,7 +577,7 @@ export default function LandingPage() {
                           : "bg-zinc-900 text-white hover:bg-zinc-700"
                       }`}
                     >
-                      {addedId === product.id ? "Added ✓" : "Add"}
+                      {addedId === product.id ? "Added ✓" : product.colors.length > 0 ? "Choose" : "Add"}
                     </button>
                   </div>
                 </div>

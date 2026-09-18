@@ -26,6 +26,7 @@ type Product = {
   image_url: string;
   category_id: string;
   is_featured: boolean;
+  colors: string[];
   variants: Variant[];
   product_images: ProductImage[];
 };

@@ -7,6 +7,7 @@ import { Plus, Trash2, CheckCircle } from "lucide-react";
 import { useToast } from "../components/toastProvider";
 import { Logo } from "../components/Logo";
 import { ImageUploadField } from "../components/ImageUploadField";
+import { ColorsEditor } from "../components/ColorsEditor";
 import { AdminNav } from "./AdminNav";
 
 type Category = { id: string; name: string; slug: string };
@@ -51,6 +52,7 @@ export default function AdminPage() {
   ]);
 
   const [images, setImages] = useState<string[]>(["", "", ""]);
+  const [colors, setColors] = useState<string[]>([]);
 
   // Verified server-side via the service-role key (bypasses RLS entirely) —
   // the same path the /api/admin/* routes use, so it can never disagree with
@@ -245,6 +247,7 @@ export default function AdminPage() {
           image_url: form.image_url,
           category_id: form.category_id,
           is_featured: form.is_featured,
+          colors,
         })
         .select()
         .single();
@@ -311,6 +314,7 @@ export default function AdminPage() {
         { size: "XL", stock: 0 },
       ]);
       setImages(["", "", ""]);
+      setColors([]);
       setTimeout(() => setSuccess(false), 3000);
 
     } catch (err) {
@@ -464,6 +468,14 @@ export default function AdminPage() {
                   />
                 </label>
               </div>
+            </div>
+
+            {/* COLORS */}
+            <div>
+              <p className="text-[10px] tracking-[0.4em] uppercase text-amber-700 font-medium mb-4">
+                Colors
+              </p>
+              <ColorsEditor colors={colors} onChange={setColors} />
             </div>
 
             {/* SIZES + STOCK */}

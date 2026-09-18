@@ -8,6 +8,7 @@ type CartItem = {
   name: string;
   image_url: string;
   size: string;
+  color?: string | null;
   price: number;
   quantity: number;
 };
@@ -15,12 +16,20 @@ type CartItem = {
 type CartContextType = {
   cartItems: CartItem[];
   addToCart: (item: CartItem) => void;
-  removeFromCart: (id: string, size: string) => void;
-  updateQuantity: (id: string, size: string, quantity: number) => void;
+  removeFromCart: (id: string, size: string, color?: string | null) => void;
+  updateQuantity: (id: string, size: string, quantity: number, color?: string | null) => void;
   clearCart: () => void;
 };
 
 const CartContext = createContext<CartContextType | null>(null);
+
+// Two lines are "the same" only if id, size, AND color all match — different
+// colors of the same size must stay as separate line items, otherwise a
+// customer adding a black M and a white M would silently merge into one
+// line with no way to tell which color they meant.
+function sameLine(i: CartItem, id: string, size: string, color?: string | null) {
+  return i.id === id && i.size === size && (i.color ?? null) === (color ?? null);
+}
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
@@ -36,31 +45,23 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const addToCart = (item: CartItem) => {
     setCartItems((prev) => {
-      const existing = prev.find(
-        (i) => i.id === item.id && i.size === item.size
-      );
+      const existing = prev.find((i) => sameLine(i, item.id, item.size, item.color));
       if (existing) {
         return prev.map((i) =>
-          i.id === item.id && i.size === item.size
-            ? { ...i, quantity: i.quantity + 1 }
-            : i
+          sameLine(i, item.id, item.size, item.color) ? { ...i, quantity: i.quantity + 1 } : i
         );
       }
       return [...prev, item];
     });
   };
 
-  const removeFromCart = (id: string, size: string) => {
-    setCartItems((prev) =>
-      prev.filter((i) => !(i.id === id && i.size === size))
-    );
+  const removeFromCart = (id: string, size: string, color?: string | null) => {
+    setCartItems((prev) => prev.filter((i) => !sameLine(i, id, size, color)));
   };
 
-  const updateQuantity = (id: string, size: string, quantity: number) => {
+  const updateQuantity = (id: string, size: string, quantity: number, color?: string | null) => {
     setCartItems((prev) =>
-      prev.map((i) =>
-        i.id === id && i.size === size ? { ...i, quantity } : i
-      )
+      prev.map((i) => (sameLine(i, id, size, color) ? { ...i, quantity } : i))
     );
   };
 
