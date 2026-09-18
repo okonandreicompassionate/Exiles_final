@@ -8,7 +8,16 @@ import { useWishlist } from "../components/wishlistProvider";
 import { useToast } from "../components/toastProvider";
 import { Logo } from "../components/Logo";
 import { isSupabaseConfigured, supabase } from "../../lib/supabase";
-import { ShoppingCart, ChevronDown, Search, Heart, Menu, X, ArrowUp, SlidersHorizontal } from "lucide-react";
+import {
+  ShoppingCart,
+  ChevronDown,
+  Search,
+  Heart,
+  Menu,
+  X,
+  ArrowUp,
+  SlidersHorizontal,
+} from "lucide-react";
 import { FiGrid, FiStar, FiBox, FiLayers, FiShoppingBag } from "react-icons/fi";
 import { GiHoodie, GiTrousers } from "react-icons/gi";
 
@@ -76,7 +85,8 @@ export default function LandingPage() {
 
       const { data, error } = await supabase
         .from("products")
-        .select(`
+        .select(
+          `
           id,
           name,
           image_url,
@@ -86,7 +96,8 @@ export default function LandingPage() {
           colors,
           categories ( name ),
           variants ( id, size, stock )
-        `)
+        `,
+        )
         .order("created_at", { ascending: false });
 
       if (error) {
@@ -101,8 +112,10 @@ export default function LandingPage() {
       setProducts(
         (data ?? []).map((p) => ({
           ...p,
-          categories: Array.isArray(p.categories) ? p.categories[0] ?? null : p.categories,
-        }))
+          categories: Array.isArray(p.categories)
+            ? (p.categories[0] ?? null)
+            : p.categories,
+        })),
       );
       setLoading(false);
     }
@@ -125,16 +138,18 @@ export default function LandingPage() {
       activeFilter === "ALL"
         ? products
         : activeFilter === "NEW"
-        ? products.filter((p) => p.is_featured)
-        : products.filter((p) => p.categories?.name === activeFilter);
+          ? products.filter((p) => p.is_featured)
+          : products.filter((p) => p.categories?.name === activeFilter);
 
     if (search.trim()) {
       const q = search.trim().toLowerCase();
       list = list.filter((p) => p.name.toLowerCase().includes(q));
     }
 
-    if (sort === "price-asc") list = [...list].sort((a, b) => a.price - b.price);
-    if (sort === "price-desc") list = [...list].sort((a, b) => b.price - a.price);
+    if (sort === "price-asc")
+      list = [...list].sort((a, b) => a.price - b.price);
+    if (sort === "price-desc")
+      list = [...list].sort((a, b) => b.price - a.price);
 
     return list;
   }, [products, activeFilter, search, sort]);
@@ -174,8 +189,10 @@ export default function LandingPage() {
     const wasWishlisted = isWishlisted(product.id);
     toggleWishlist(product.id);
     showToast(
-      wasWishlisted ? `Removed ${product.name} from wishlist` : `Saved ${product.name} to wishlist`,
-      "info"
+      wasWishlisted
+        ? `Removed ${product.name} from wishlist`
+        : `Saved ${product.name} to wishlist`,
+      "info",
     );
   };
 
@@ -195,7 +212,6 @@ export default function LandingPage() {
 
   return (
     <div className="bg-white min-h-screen text-zinc-900">
-
       {/* NAV */}
       <nav className="fixed top-0 left-0 right-0 z-50 glass-nav">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-8 py-4 flex items-center gap-3">
@@ -210,9 +226,24 @@ export default function LandingPage() {
 
           {/* LEFT NAV */}
           <div className="hidden md:flex gap-8 text-xs tracking-[0.2em] uppercase flex-1">
-            <button onClick={() => setActiveFilter("NEW")} className={`transition-colors ${activeFilter === "NEW" ? "text-zinc-900" : "text-zinc-500 hover:text-zinc-800"}`}>New</button>
-            <button onClick={() => setActiveFilter("Hoodies")} className={`transition-colors ${activeFilter === "Hoodies" ? "text-zinc-900" : "text-zinc-500 hover:text-zinc-800"}`}>Hoodies</button>
-            <button onClick={() => setActiveFilter("Jackets")} className={`transition-colors ${activeFilter === "Jackets" ? "text-zinc-900" : "text-zinc-500 hover:text-zinc-800"}`}>Jackets</button>
+            <button
+              onClick={() => setActiveFilter("NEW")}
+              className={`transition-colors ${activeFilter === "NEW" ? "text-zinc-900" : "text-zinc-500 hover:text-zinc-800"}`}
+            >
+              New
+            </button>
+            <button
+              onClick={() => setActiveFilter("Hoodies")}
+              className={`transition-colors ${activeFilter === "Hoodies" ? "text-zinc-900" : "text-zinc-500 hover:text-zinc-800"}`}
+            >
+              Hoodies
+            </button>
+            <button
+              onClick={() => setActiveFilter("Jackets")}
+              className={`transition-colors ${activeFilter === "Jackets" ? "text-zinc-900" : "text-zinc-500 hover:text-zinc-800"}`}
+            >
+              Jackets
+            </button>
           </div>
 
           {/* LOGO */}
@@ -227,7 +258,11 @@ export default function LandingPage() {
               className="text-zinc-600 hover:text-zinc-900 transition-colors"
               aria-label="Search"
             >
-              {searchOpen ? <X size={18} strokeWidth={1.5} /> : <Search size={18} strokeWidth={1.5} />}
+              {searchOpen ? (
+                <X size={18} strokeWidth={1.5} />
+              ) : (
+                <Search size={18} strokeWidth={1.5} />
+              )}
             </button>
             <button
               onClick={() => setActiveFilter("WISHLIST")}
@@ -235,14 +270,23 @@ export default function LandingPage() {
               aria-label="Wishlist"
               title="Wishlist"
             >
-              <Heart size={18} strokeWidth={1.5} className={wishlist.length > 0 ? "fill-red-500 text-red-500" : ""} />
+              <Heart
+                size={18}
+                strokeWidth={1.5}
+                className={
+                  wishlist.length > 0 ? "fill-red-500 text-red-500" : ""
+                }
+              />
               {wishlist.length > 0 && (
                 <span className="absolute -top-2 -right-2 w-4 h-4 bg-zinc-900 text-white text-[10px] rounded-full flex items-center justify-center font-bold">
                   {wishlist.length}
                 </span>
               )}
             </button>
-            <Link href="/cart" className="relative flex items-center gap-2 text-zinc-600 hover:text-zinc-900 transition-colors">
+            <Link
+              href="/cart"
+              className="relative flex items-center gap-2 text-zinc-600 hover:text-zinc-900 transition-colors"
+            >
               <ShoppingCart size={18} strokeWidth={1.5} />
               {cartItems.length > 0 && (
                 <span className="absolute -top-2 -right-2 w-4 h-4 bg-zinc-900 text-white text-[10px] rounded-full flex items-center justify-center font-bold">
@@ -255,7 +299,10 @@ export default function LandingPage() {
 
         {/* SEARCH BAR — expands under nav */}
         {searchOpen && (
-          <div className="border-t border-zinc-900/10 px-4 sm:px-8 py-3 animate-fade-in-up" style={{ animationDuration: "0.25s" }}>
+          <div
+            className="border-t border-zinc-900/10 px-4 sm:px-8 py-3 animate-fade-in-up"
+            style={{ animationDuration: "0.25s" }}
+          >
             <div className="max-w-[1400px] mx-auto flex items-center gap-2 glass-input rounded-xl px-4 py-2.5">
               <Search size={15} className="text-zinc-500 flex-shrink-0" />
               <input
@@ -267,7 +314,10 @@ export default function LandingPage() {
                 className="flex-1 bg-transparent outline-none text-sm text-zinc-900 placeholder-zinc-400"
               />
               {search && (
-                <button onClick={() => setSearch("")} className="text-zinc-500 hover:text-zinc-900">
+                <button
+                  onClick={() => setSearch("")}
+                  className="text-zinc-500 hover:text-zinc-900"
+                >
                   <X size={14} />
                 </button>
               )}
@@ -283,10 +333,16 @@ export default function LandingPage() {
             className="absolute inset-0 bg-zinc-900/30 backdrop-blur-sm"
             onClick={() => setMobileMenuOpen(false)}
           />
-          <div className="absolute top-0 left-0 bottom-0 w-[78%] max-w-xs glass-strong p-6 flex flex-col gap-1 animate-fade-in-up" style={{ animationDuration: "0.3s" }}>
+          <div
+            className="absolute top-0 left-0 bottom-0 w-[78%] max-w-xs glass-strong p-6 flex flex-col gap-1 animate-fade-in-up"
+            style={{ animationDuration: "0.3s" }}
+          >
             <div className="flex items-center justify-between mb-6">
               <Logo textClassName="text-xs" markClassName="h-6 w-auto" />
-              <button onClick={() => setMobileMenuOpen(false)} className="text-zinc-500 hover:text-zinc-900">
+              <button
+                onClick={() => setMobileMenuOpen(false)}
+                className="text-zinc-500 hover:text-zinc-900"
+              >
                 <X size={20} />
               </button>
             </div>
@@ -300,7 +356,9 @@ export default function LandingPage() {
                     setMobileMenuOpen(false);
                   }}
                   className={`flex items-center gap-3 px-3 py-3 rounded-xl text-xs tracking-[0.15em] uppercase transition-colors ${
-                    activeFilter === cat.name ? "bg-zinc-900/8 text-zinc-900" : "text-zinc-500 hover:bg-zinc-900/5 hover:text-zinc-900"
+                    activeFilter === cat.name
+                      ? "bg-zinc-900/8 text-zinc-900"
+                      : "text-zinc-500 hover:bg-zinc-900/5 hover:text-zinc-900"
                   }`}
                 >
                   <Icon size={16} />
@@ -332,11 +390,19 @@ export default function LandingPage() {
       )}
 
       {/* HERO — sits on the photo, keeps light-on-dark treatment regardless of page theme */}
-      <div className="relative w-full h-screen overflow-hidden">
+      <div className="hero-scene relative w-full h-screen overflow-hidden">
         <img
           src="https://i.imgur.com/XOTz8wd.jpeg"
           alt="Hero"
-          className="w-full h-full object-cover object-top animate-slow-zoom"
+          className="w-full h-full object-cover object-top hero-image-glitch"
+        />
+        <div
+          className="hero-glitch-slice hero-glitch-slice--red"
+          aria-hidden="true"
+        />
+        <div
+          className="hero-glitch-slice hero-glitch-slice--green"
+          aria-hidden="true"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-zinc-950/50 via-transparent to-white" />
         <div className="absolute inset-0 bg-gradient-to-r from-zinc-950/30 to-transparent" />
@@ -344,12 +410,17 @@ export default function LandingPage() {
         {/* HERO TEXT */}
         <div className="absolute bottom-32 left-6 sm:left-16 right-6 sm:right-auto">
           <p className="text-[10px] tracking-[0.5em] uppercase text-zinc-300 mb-4">
-            Limited Edition Styles
+            System status: compromised
           </p>
           <h2 className="font-brand text-6xl sm:text-8xl leading-[0.9] tracking-wide text-white">
-            EX1LES<br />
+            EX1LES
+            <br />
             <span className="text-zinc-200">Culture</span>
           </h2>
+          <p className="hero-cryptic-message" aria-hidden="true">
+            ИЗГНАННИКИ ВСЁ ЕЩЁ ПРОНИКАЮТ
+          </p>
+          <p className="hero-operator-graffiti">ANDREI</p>
           <p className="text-[10px] tracking-[0.4em] uppercase text-zinc-300 mt-5 mb-6">
             Drop coming soon
           </p>
@@ -363,7 +434,9 @@ export default function LandingPage() {
 
         {/* SCROLL INDICATOR */}
         <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2">
-          <p className="text-[9px] tracking-[0.4em] uppercase text-zinc-300">Scroll</p>
+          <p className="text-[9px] tracking-[0.4em] uppercase text-zinc-300">
+            Scroll
+          </p>
           <div className="w-7 h-7 rounded-full bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center animate-bounce">
             <ChevronDown size={12} className="text-white" />
           </div>
@@ -378,7 +451,10 @@ export default function LandingPage() {
       </div>
 
       {/* SHOP BY CATEGORY */}
-      <div id="products" className="max-w-[1400px] mx-auto px-4 sm:px-8 pt-16 pb-8">
+      <div
+        id="products"
+        className="max-w-[1400px] mx-auto px-4 sm:px-8 pt-16 pb-8"
+      >
         <p className="text-[10px] tracking-[0.4em] uppercase text-amber-700 font-medium mb-6">
           Shop by Category
         </p>
@@ -440,7 +516,6 @@ export default function LandingPage() {
 
       {/* PRODUCTS SECTION */}
       <div className="max-w-[1400px] mx-auto px-4 sm:px-8 py-8 pb-20">
-
         {/* SECTION HEADER */}
         <div className="flex flex-wrap justify-between items-center gap-3 mb-8">
           <div>
@@ -448,10 +523,10 @@ export default function LandingPage() {
               {activeFilter === "ALL"
                 ? "All Products"
                 : activeFilter === "NEW"
-                ? "New Arrivals"
-                : activeFilter === "WISHLIST"
-                ? "Your Wishlist"
-                : activeFilter}
+                  ? "New Arrivals"
+                  : activeFilter === "WISHLIST"
+                    ? "Your Wishlist"
+                    : activeFilter}
             </h2>
             <p className="text-[10px] text-zinc-500 mt-1 tracking-wider">
               {activeFilter === "WISHLIST"
@@ -467,12 +542,24 @@ export default function LandingPage() {
               onChange={(e) => setSort(e.target.value as SortOption)}
               className="glass appearance-none text-zinc-600 text-[10px] tracking-widest uppercase pl-8 pr-8 py-2.5 outline-none cursor-pointer rounded-xl transition-colors hover:bg-zinc-900/5"
             >
-              <option value="newest" className="bg-white">Newest</option>
-              <option value="price-asc" className="bg-white">Price: Low to High</option>
-              <option value="price-desc" className="bg-white">Price: High to Low</option>
+              <option value="newest" className="bg-white">
+                Newest
+              </option>
+              <option value="price-asc" className="bg-white">
+                Price: Low to High
+              </option>
+              <option value="price-desc" className="bg-white">
+                Price: High to Low
+              </option>
             </select>
-            <SlidersHorizontal size={11} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
-            <ChevronDown size={11} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
+            <SlidersHorizontal
+              size={11}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none"
+            />
+            <ChevronDown
+              size={11}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none"
+            />
           </div>
         </div>
 
@@ -504,7 +591,10 @@ export default function LandingPage() {
                 className="group glass rounded-2xl overflow-hidden hover:bg-zinc-900/[0.03] hover:border-zinc-900/15 transition-all duration-500 hover:shadow-xl hover:shadow-zinc-900/10 hover:-translate-y-1 flex flex-col"
               >
                 {/* IMAGE */}
-                <Link href={`/product/${product.id}`} className="aspect-[3/4] overflow-hidden bg-zinc-100 relative block">
+                <Link
+                  href={`/product/${product.id}`}
+                  className="aspect-[3/4] overflow-hidden bg-zinc-100 relative block"
+                >
                   <img
                     src={product.image_url}
                     alt={product.name}
@@ -530,7 +620,11 @@ export default function LandingPage() {
                   >
                     <Heart
                       size={14}
-                      className={isWishlisted(product.id) ? "fill-red-500 text-red-500" : "text-zinc-800"}
+                      className={
+                        isWishlisted(product.id)
+                          ? "fill-red-500 text-red-500"
+                          : "text-zinc-800"
+                      }
                     />
                   </button>
                 </Link>
@@ -555,7 +649,10 @@ export default function LandingPage() {
                   {/* SIZE PILLS */}
                   <div className="flex gap-1 flex-wrap">
                     {product.variants.slice(0, 4).map((v) => (
-                      <span key={v.id} className={`text-[9px] px-1.5 py-0.5 rounded-md border tracking-wide ${v.stock === 0 ? "border-zinc-200 text-zinc-300" : "border-zinc-300 text-zinc-600"}`}>
+                      <span
+                        key={v.id}
+                        className={`text-[9px] px-1.5 py-0.5 rounded-md border tracking-wide ${v.stock === 0 ? "border-zinc-200 text-zinc-300" : "border-zinc-300 text-zinc-600"}`}
+                      >
                         {v.size}
                       </span>
                     ))}
@@ -577,7 +674,11 @@ export default function LandingPage() {
                           : "bg-zinc-900 text-white hover:bg-zinc-700"
                       }`}
                     >
-                      {addedId === product.id ? "Added ✓" : product.colors.length > 0 ? "Choose" : "Add"}
+                      {addedId === product.id
+                        ? "Added ✓"
+                        : product.colors.length > 0
+                          ? "Choose"
+                          : "Add"}
                     </button>
                   </div>
                 </div>
@@ -596,8 +697,8 @@ export default function LandingPage() {
                 {activeFilter === "WISHLIST"
                   ? "Nothing saved yet"
                   : search
-                  ? `No results for "${search}"`
-                  : "No products in this category yet"}
+                    ? `No results for "${search}"`
+                    : "No products in this category yet"}
               </p>
               <button
                 onClick={() => {
@@ -623,9 +724,9 @@ export default function LandingPage() {
           </h2>
 
           <p className="mt-3 text-sm leading-relaxed text-neutral-600">
-            This is a pre-drop release. The official launch date for the full drop
-            will be announced in the coming days. Stay locked in — limited pieces
-            may go live before the main release.
+            This is a pre-drop release. The official launch date for the full
+            drop will be announced in the coming days. Stay locked in — limited
+            pieces may go live before the main release.
           </p>
         </div>
       </section>
@@ -635,31 +736,72 @@ export default function LandingPage() {
         <div className="max-w-[1400px] mx-auto px-4 sm:px-8 py-12 sm:py-16">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             <div className="col-span-2 md:col-span-1">
-              <Logo textClassName="text-sm" markClassName="h-7 w-auto" className="mb-4" />
+              <Logo
+                textClassName="text-sm"
+                markClassName="h-7 w-auto"
+                className="mb-4"
+              />
               <p className="text-xs text-zinc-500 leading-relaxed">
                 Clean silhouettes. Premium everyday wear built for presence.
               </p>
             </div>
             <div>
-              <p className="text-[10px] tracking-[0.3em] uppercase text-amber-700 font-medium mb-4">Shop</p>
+              <p className="text-[10px] tracking-[0.3em] uppercase text-amber-700 font-medium mb-4">
+                Shop
+              </p>
               <ul className="space-y-2.5 text-xs text-zinc-500">
-                <li onClick={() => setActiveFilter("NEW")} className="hover:text-zinc-900 cursor-pointer transition-colors">Latest drop</li>
-                <li onClick={() => setActiveFilter("Hoodies")} className="hover:text-zinc-900 cursor-pointer transition-colors">Hoodies</li>
-                <li onClick={() => setActiveFilter("Jackets")} className="hover:text-zinc-900 cursor-pointer transition-colors">Jackets</li>
+                <li
+                  onClick={() => setActiveFilter("NEW")}
+                  className="hover:text-zinc-900 cursor-pointer transition-colors"
+                >
+                  Latest drop
+                </li>
+                <li
+                  onClick={() => setActiveFilter("Hoodies")}
+                  className="hover:text-zinc-900 cursor-pointer transition-colors"
+                >
+                  Hoodies
+                </li>
+                <li
+                  onClick={() => setActiveFilter("Jackets")}
+                  className="hover:text-zinc-900 cursor-pointer transition-colors"
+                >
+                  Jackets
+                </li>
               </ul>
             </div>
             <div>
-              <p className="text-[10px] tracking-[0.3em] uppercase text-amber-700 font-medium mb-4">Support</p>
+              <p className="text-[10px] tracking-[0.3em] uppercase text-amber-700 font-medium mb-4">
+                Support
+              </p>
               <ul className="space-y-2.5 text-xs text-zinc-500">
-                <li><Link href="/shipping_policy" className="hover:text-zinc-900 cursor-pointer transition-colors">Shipping</Link></li>
-                <li className="hover:text-zinc-900 cursor-pointer transition-colors">Contact</li>
-                <li className="hover:text-zinc-900 cursor-pointer transition-colors">Returns</li>
+                <li>
+                  <Link
+                    href="/shipping_policy"
+                    className="hover:text-zinc-900 cursor-pointer transition-colors"
+                  >
+                    Shipping
+                  </Link>
+                </li>
+                <li className="hover:text-zinc-900 cursor-pointer transition-colors">
+                  Contact
+                </li>
+                <li className="hover:text-zinc-900 cursor-pointer transition-colors">
+                  Returns
+                </li>
               </ul>
             </div>
             <div className="col-span-2 md:col-span-1">
-              <p className="text-[10px] tracking-[0.3em] uppercase text-amber-700 font-medium mb-4">Stay Updated</p>
-              <p className="text-xs text-zinc-500 mb-4 leading-relaxed">Get early access to drops.</p>
-              <form onSubmit={handleNewsletterSubmit} className="flex glass-input rounded-xl overflow-hidden">
+              <p className="text-[10px] tracking-[0.3em] uppercase text-amber-700 font-medium mb-4">
+                Stay Updated
+              </p>
+              <p className="text-xs text-zinc-500 mb-4 leading-relaxed">
+                Get early access to drops.
+              </p>
+              <form
+                onSubmit={handleNewsletterSubmit}
+                className="flex glass-input rounded-xl overflow-hidden"
+              >
                 <input
                   type="email"
                   value={newsletterEmail}
@@ -667,7 +809,10 @@ export default function LandingPage() {
                   placeholder="Email address"
                   className="flex-1 px-4 py-2.5 outline-none text-xs bg-transparent text-zinc-900 placeholder-zinc-400 min-w-0"
                 />
-                <button type="submit" className="bg-zinc-900 text-white px-4 text-[10px] uppercase tracking-widest font-medium hover:bg-zinc-700 transition-colors flex-shrink-0">
+                <button
+                  type="submit"
+                  className="bg-zinc-900 text-white px-4 text-[10px] uppercase tracking-widest font-medium hover:bg-zinc-700 transition-colors flex-shrink-0"
+                >
                   Join
                 </button>
               </form>
@@ -676,8 +821,12 @@ export default function LandingPage() {
           <div className="border-t border-zinc-900/10 mt-12 pt-6 flex flex-col sm:flex-row justify-between items-center gap-4 text-[10px] text-zinc-400 tracking-widest uppercase">
             <p>© {new Date().getFullYear()} EX1LES. All rights reserved.</p>
             <div className="flex gap-6">
-              <span className="hover:text-zinc-900 cursor-pointer transition-colors">Instagram</span>
-              <span className="hover:text-zinc-900 cursor-pointer transition-colors">Twitter</span>
+              <span className="hover:text-zinc-900 cursor-pointer transition-colors">
+                Instagram
+              </span>
+              <span className="hover:text-zinc-900 cursor-pointer transition-colors">
+                Twitter
+              </span>
             </div>
           </div>
         </div>

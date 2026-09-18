@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation";
+import { EntryExperience } from "./components/EntryExperience";
 
 export default function Home() {
-  redirect("/shop");
+  return <EntryExperience />;
 }

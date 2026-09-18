@@ -25,7 +25,7 @@ const bebasNeue = Bebas_Neue({
 });
 
 export const metadata = {
-  title: "EXILES - TOTEME",
+  title: "EXILES COMPROMISED",
   description:
     "Premium fashion brand - Timeless style crafted for modern expression",
 };
@@ -47,7 +47,9 @@ export default function RootLayout({
       className={`${coolvetica.variable} ${raleway.variable} ${bebasNeue.variable}`}
       suppressHydrationWarning
     >
-      <body className={`${raleway.className} bg-white text-zinc-900 antialiased`}>
+      <body
+        className={`${raleway.className} bg-white text-zinc-900 antialiased`}
+      >
         {/* Ambient blurred color blobs — the surface every glass panel blurs against */}
         <div className="ambient-bg" aria-hidden="true">
           <div className="ambient-blob ambient-blob-1" />
