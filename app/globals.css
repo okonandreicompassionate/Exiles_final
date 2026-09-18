@@ -58,6 +58,30 @@
   animation: slowZoom 20s ease-out forwards;
 }
 
+@keyframes directTransferGlow {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 0 rgba(217, 164, 65, 0.12),
+      0 8px 22px rgba(120, 80, 20, 0.12);
+  }
+  50% {
+    box-shadow:
+      0 0 0 7px rgba(217, 164, 65, 0.08),
+      0 10px 30px rgba(120, 80, 20, 0.26);
+  }
+}
+
+.direct-transfer-glow {
+  animation: directTransferGlow 2.8s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .direct-transfer-glow {
+    animation: none;
+  }
+}
+
 @keyframes heroImageGlitch {
   0%,
   18% {

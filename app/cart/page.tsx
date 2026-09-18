@@ -654,27 +654,17 @@ export default function CartPage() {
 
               {/* PAYMENT OPTIONS */}
               <button
-                onClick={handlePayCard}
-                disabled={payingCard || payingTransfer}
-                className={`w-full py-4 text-xs tracking-[0.25em] uppercase font-semibold rounded-xl transition-all duration-300 ${
-                  payingCard || payingTransfer
-                    ? "bg-zinc-200 text-zinc-400 cursor-not-allowed"
-                    : "bg-zinc-900 text-white hover:bg-zinc-700 shadow-lg shadow-zinc-900/10"
-                }`}
-              >
-                {payingCard
-                  ? "Redirecting to secure checkout..."
-                  : "Pay Now — Card / Bank / USSD"}
-              </button>
-
-              <button
                 onClick={handleBankTransfer}
                 disabled={payingCard || payingTransfer}
-                className="w-full py-3 text-[10px] tracking-[0.2em] uppercase text-zinc-500 hover:text-zinc-900 transition-colors disabled:opacity-50"
+                className={`direct-transfer-glow w-full py-4 text-xs tracking-[0.25em] uppercase font-semibold rounded-xl transition-all duration-300 ${
+                  payingCard || payingTransfer
+                    ? "bg-zinc-200 text-zinc-400 cursor-not-allowed"
+                    : "bg-zinc-900 text-white hover:bg-zinc-700 shadow-lg shadow-amber-900/20"
+                }`}
               >
                 {payingTransfer
-                  ? "Redirecting..."
-                  : "Prefer bank transfer? Pay manually instead"}
+                  ? "Opening transfer details..."
+                  : "Pay Directly by Bank Transfer"}
               </button>
 
               <p className="text-zinc-400 text-[10px] tracking-wide text-center">
@@ -709,7 +699,9 @@ export default function CartPage() {
           </span>
         </div>
         <button
-          onClick={step === "bag" ? () => setStep("delivery") : handlePayCard}
+          onClick={
+            step === "bag" ? () => setStep("delivery") : handleBankTransfer
+          }
           disabled={payingCard || payingTransfer}
           className={`w-full py-4 text-xs tracking-[0.25em] uppercase font-semibold rounded-xl transition-all ${
             payingCard || payingTransfer
@@ -719,19 +711,10 @@ export default function CartPage() {
         >
           {step === "bag"
             ? "Continue to Delivery"
-            : payingCard
-              ? "Redirecting..."
-              : "Pay Now"}
+            : payingTransfer
+              ? "Opening transfer details..."
+              : "Pay Directly by Transfer"}
         </button>
-        {step === "delivery" && (
-          <button
-            onClick={handleBankTransfer}
-            disabled={payingCard || payingTransfer}
-            className="w-full mt-2 py-2 text-[10px] tracking-[0.15em] uppercase text-zinc-500 disabled:opacity-50"
-          >
-            {payingTransfer ? "Redirecting..." : "Or pay via bank transfer"}
-          </button>
-        )}
       </div>
     </div>
   );
