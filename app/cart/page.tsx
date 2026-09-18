@@ -120,7 +120,10 @@ export default function CartPage() {
   const createOrder = async (
     paymentMethod: "bank_transfer" | "squad",
   ): Promise<string | null> => {
-    if (!isSupabaseConfigured || !supabase) return null;
+    if (!isSupabaseConfigured || !supabase) {
+      showToast("Supabase is not configured", "error");
+      return null;
+    }
 
     try {
       const { data: order, error: orderErr } = await supabase
@@ -142,7 +145,14 @@ export default function CartPage() {
         .select("id")
         .single();
 
-      if (orderErr || !order) return null;
+      if (orderErr || !order) {
+        console.error("Order creation failed:", orderErr);
+        showToast(
+          `Order creation failed: ${orderErr?.message ?? "No order was returned"}`,
+          "error",
+        );
+        return null;
+      }
 
       const { error: itemsErr } = await supabase.from("order_items").insert(
         cartItems.map((item) => ({
@@ -156,12 +166,17 @@ export default function CartPage() {
           quantity: item.quantity,
         })),
       );
-      if (itemsErr) return null;
+      if (itemsErr) {
+        console.error("Order items creation failed:", itemsErr);
+        showToast(`Order items failed: ${itemsErr.message}`, "error");
+        return null;
+      }
 
       localStorage.setItem("pendingOrderId", order.id);
       return order.id;
     } catch (err) {
       console.warn("Order recording failed:", err);
+      showToast("Order recording failed. Check the database setup.", "error");
       return null;
     }
   };

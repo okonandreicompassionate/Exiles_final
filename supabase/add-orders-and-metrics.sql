@@ -34,9 +34,17 @@ create table if not exists order_items (
   variant_id uuid references variants(id) on delete set null,
   name text not null,
   size text,
+  color text,
   price integer not null default 0, -- kobo, per unit
   quantity integer not null default 1
 );
+
+-- The card checkout uses Squad. Keep this migration compatible with older
+-- databases that created the original bank-transfer/Paystack-only constraint.
+alter table orders drop constraint if exists orders_payment_method_check;
+alter table orders add constraint orders_payment_method_check
+  check (payment_method in ('bank_transfer', 'squad', 'paystack'));
+alter table orders add column if not exists gateway_reference text;
 
 -- ============================================================================
 -- INDEXES — Postgres doesn't auto-index foreign keys, and the dashboard
