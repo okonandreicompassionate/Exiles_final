@@ -408,11 +408,11 @@ export default function LandingPage() {
         <div className="absolute inset-0 bg-gradient-to-r from-zinc-950/30 to-transparent" />
 
         {/* HERO TEXT */}
-        <div className="absolute bottom-32 left-6 sm:left-16 right-6 sm:right-auto">
+        <div className="hero-copy absolute bottom-32 left-6 sm:left-16 right-6 sm:right-auto">
           <p className="text-[10px] tracking-[0.5em] uppercase text-zinc-300 mb-4">
             System status: compromised
           </p>
-          <h2 className="font-brand text-6xl sm:text-8xl leading-[0.9] tracking-wide text-white">
+          <h2 className="hero-title font-brand text-6xl sm:text-8xl leading-[0.9] tracking-wide text-white">
             EX1LES
             <br />
             <span className="text-zinc-200">Culture</span>
