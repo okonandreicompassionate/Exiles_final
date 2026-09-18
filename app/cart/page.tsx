@@ -126,6 +126,38 @@ export default function CartPage() {
     }
 
     try {
+      const productIds = [...new Set(cartItems.map((item) => item.product_id))];
+      const { data: currentVariants, error: variantsErr } = await supabase
+        .from("variants")
+        .select("id, product_id, size")
+        .in("product_id", productIds);
+
+      if (variantsErr) {
+        console.error("Variant lookup failed:", variantsErr);
+        showToast(`Could not verify sizes: ${variantsErr.message}`, "error");
+        return null;
+      }
+
+      const variantIds = new Map(
+        (currentVariants ?? []).map((variant) => [
+          `${variant.product_id}:${variant.size}`,
+          variant.id,
+        ]),
+      );
+      const resolvedItems = cartItems.map((item) => ({
+        item,
+        variantId: variantIds.get(`${item.product_id}:${item.size}`),
+      }));
+      const missingItem = resolvedItems.find(({ variantId }) => !variantId);
+
+      if (missingItem) {
+        showToast(
+          `${missingItem.item.name} size ${missingItem.item.size} is no longer available. Remove it and add the current size again.`,
+          "error",
+        );
+        return null;
+      }
+
       const { data: order, error: orderErr } = await supabase
         .from("orders")
         .insert({
@@ -155,10 +187,10 @@ export default function CartPage() {
       }
 
       const { error: itemsErr } = await supabase.from("order_items").insert(
-        cartItems.map((item) => ({
+        resolvedItems.map(({ item, variantId }) => ({
           order_id: order.id,
           product_id: item.product_id,
-          variant_id: item.id,
+          variant_id: variantId,
           name: item.name,
           size: item.size,
           color: item.color ?? null,
