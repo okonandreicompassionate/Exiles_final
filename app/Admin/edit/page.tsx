@@ -3,10 +3,18 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase, isSupabaseConfigured } from "../../../lib/supabase";
-import { Trash2, Plus, CheckCircle, X, ChevronDown, ChevronUp } from "lucide-react";
+import {
+  Trash2,
+  Plus,
+  CheckCircle,
+  X,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
 import { useToast } from "../../components/toastProvider";
 import { Logo } from "../../components/Logo";
 import { ImageUploadField } from "../../components/ImageUploadField";
+import { ColorsEditor } from "../../components/ColorsEditor";
 import { AdminNav } from "../AdminNav";
 
 const ALL_SIZES = ["XS", "S", "M", "L", "XL", "XXL"];
@@ -56,19 +64,28 @@ export default function EditProductsPage() {
   // a missing SUPABASE_SERVICE_ROLE_KEY on this deployment) instead of
   // masking every failure as "not an admin".
   async function fetchMyAdminRow(
-    accessToken: string
-  ): Promise<{ admin: { role: "god" | "admin"; email: string } | null; error: string | null }> {
+    accessToken: string,
+  ): Promise<{
+    admin: { role: "god" | "admin"; email: string } | null;
+    error: string | null;
+  }> {
     try {
       const res = await fetch("/api/admin/me", {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
       const json = await res.json();
       if (!res.ok) {
-        return { admin: null, error: json.error ?? `Request failed (${res.status})` };
+        return {
+          admin: null,
+          error: json.error ?? `Request failed (${res.status})`,
+        };
       }
       return { admin: json.admin ?? null, error: null };
     } catch (err) {
-      return { admin: null, error: err instanceof Error ? err.message : "Network error" };
+      return {
+        admin: null,
+        error: err instanceof Error ? err.message : "Network error",
+      };
     }
   }
 
@@ -109,7 +126,10 @@ export default function EditProductsPage() {
 
   async function handleLogin() {
     if (!supabase) {
-      showToast("Supabase is not configured. Add your environment variables first.", "error");
+      showToast(
+        "Supabase is not configured. Add your environment variables first.",
+        "error",
+      );
       return;
     }
     if (!loginEmail || !loginPassword) {
@@ -129,13 +149,17 @@ export default function EditProductsPage() {
       return;
     }
 
-    const { admin: adminRow, error: adminErr } = await fetchMyAdminRow(data.session.access_token);
+    const { admin: adminRow, error: adminErr } = await fetchMyAdminRow(
+      data.session.access_token,
+    );
 
     if (!adminRow) {
       await supabase.auth.signOut();
       showToast(
-        adminErr && adminErr !== "Not an admin" ? `Admin check failed: ${adminErr}` : "This account is not an admin",
-        "error"
+        adminErr && adminErr !== "Not an admin"
+          ? `Admin check failed: ${adminErr}`
+          : "This account is not an admin",
+        "error",
       );
       setLoginLoading(false);
       return;
@@ -158,7 +182,9 @@ export default function EditProductsPage() {
   async function fetchCategories() {
     if (!supabase) return;
 
-    const { data, error } = await supabase.from("categories").select("id, name, slug");
+    const { data, error } = await supabase
+      .from("categories")
+      .select("id, name, slug");
     if (error) {
       showToast(`Failed to load categories: ${error.message}`, "error");
       return;
@@ -171,29 +197,38 @@ export default function EditProductsPage() {
 
     const { data, error } = await supabase
       .from("products")
-      .select(`
-        id, name, description, price, image_url, category_id, is_featured,
+      .select(
+        `
+        id, name, description, price, image_url, category_id, is_featured, colors,
         variants (id, size, stock),
         product_images (id, image_url, position)
-      `)
+      `,
+      )
       .order("created_at", { ascending: false });
 
-    if (error) { showToast("Failed to load products: " + error.message, "error"); return; }
+    if (error) {
+      showToast("Failed to load products: " + error.message, "error");
+      return;
+    }
 
     const parsed: Product[] = (data ?? []).map((p: any) => ({
       ...p,
+      colors: p.colors ?? [],
       variants: (p.variants ?? []).sort(
-        (a: Variant, b: Variant) => ALL_SIZES.indexOf(a.size) - ALL_SIZES.indexOf(b.size)
+        (a: Variant, b: Variant) =>
+          ALL_SIZES.indexOf(a.size) - ALL_SIZES.indexOf(b.size),
       ),
       product_images: (p.product_images ?? []).sort(
-        (a: ProductImage, b: ProductImage) => a.position - b.position
+        (a: ProductImage, b: ProductImage) => a.position - b.position,
       ),
     }));
 
     setProducts(parsed);
 
     const seed: Record<string, Product> = {};
-    parsed.forEach((p) => { seed[p.id] = JSON.parse(JSON.stringify(p)); });
+    parsed.forEach((p) => {
+      seed[p.id] = JSON.parse(JSON.stringify(p));
+    });
     setEditData(seed);
   }
 
@@ -225,7 +260,7 @@ export default function EditProductsPage() {
     const updated = exists
       ? variants.filter((v) => v.size !== size)
       : [...variants, { size, stock: 0 }].sort(
-          (a, b) => ALL_SIZES.indexOf(a.size) - ALL_SIZES.indexOf(b.size)
+          (a, b) => ALL_SIZES.indexOf(a.size) - ALL_SIZES.indexOf(b.size),
         );
     updateField(productId, "variants", updated);
   }
@@ -245,13 +280,18 @@ export default function EditProductsPage() {
   }
 
   function removeImageSlot(productId: string, idx: number) {
-    const images = editData[productId].product_images.filter((_, i) => i !== idx);
+    const images = editData[productId].product_images.filter(
+      (_, i) => i !== idx,
+    );
     updateField(productId, "product_images", images);
   }
 
   async function handleSave(id: string) {
     if (!supabase) {
-      showToast("Supabase is not configured. Add your environment variables first.", "error");
+      showToast(
+        "Supabase is not configured. Add your environment variables first.",
+        "error",
+      );
       return;
     }
 
@@ -269,6 +309,7 @@ export default function EditProductsPage() {
           image_url: p.image_url,
           category_id: p.category_id,
           is_featured: p.is_featured,
+          colors: p.colors,
         })
         .eq("id", id);
       if (pErr) throw new Error("Product update failed: " + pErr.message);
@@ -278,19 +319,18 @@ export default function EditProductsPage() {
         .from("variants")
         .delete()
         .eq("product_id", id);
-      if (delVErr) throw new Error("Failed to clear variants: " + delVErr.message);
+      if (delVErr)
+        throw new Error("Failed to clear variants: " + delVErr.message);
 
       // 3. Reinsert variants fresh — no duplicates possible
       if (p.variants.length > 0) {
-        const { error: vErr } = await supabase
-          .from("variants")
-          .insert(
-            p.variants.map((v) => ({
-              product_id: id,
-              size: v.size,
-              stock: v.stock,
-            }))
-          );
+        const { error: vErr } = await supabase.from("variants").insert(
+          p.variants.map((v) => ({
+            product_id: id,
+            size: v.size,
+            stock: v.stock,
+          })),
+        );
         if (vErr) throw new Error("Failed to save variants: " + vErr.message);
       }
 
@@ -299,22 +339,21 @@ export default function EditProductsPage() {
         .from("product_images")
         .delete()
         .eq("product_id", id);
-      if (delIErr) throw new Error("Failed to clear images: " + delIErr.message);
+      if (delIErr)
+        throw new Error("Failed to clear images: " + delIErr.message);
 
       // 5. Reinsert valid images fresh — no duplicates possible
       const validImages = p.product_images.filter(
-        (img) => img.image_url.trim() !== ""
+        (img) => img.image_url.trim() !== "",
       );
       if (validImages.length > 0) {
-        const { error: iErr } = await supabase
-          .from("product_images")
-          .insert(
-            validImages.map((img, idx) => ({
-              product_id: id,
-              image_url: img.image_url.trim(),
-              position: idx,
-            }))
-          );
+        const { error: iErr } = await supabase.from("product_images").insert(
+          validImages.map((img, idx) => ({
+            product_id: id,
+            image_url: img.image_url.trim(),
+            position: idx,
+          })),
+        );
         if (iErr) throw new Error("Failed to save images: " + iErr.message);
       }
 
@@ -322,7 +361,6 @@ export default function EditProductsPage() {
       showToast("Changes saved", "success");
       setTimeout(() => setSaved(null), 3000);
       await fetchProducts();
-
     } catch (err: any) {
       showToast("Save failed: " + err.message, "error");
     }
@@ -332,7 +370,10 @@ export default function EditProductsPage() {
 
   async function handleDelete(id: string) {
     if (!supabase) {
-      showToast("Supabase is not configured. Add your environment variables first.", "error");
+      showToast(
+        "Supabase is not configured. Add your environment variables first.",
+        "error",
+      );
       return;
     }
 
@@ -362,8 +403,12 @@ export default function EditProductsPage() {
           <div className="text-center flex flex-col items-center gap-3">
             <Logo showText={false} markClassName="h-10" />
             <div>
-              <h1 className="font-bold tracking-[0.4em] text-sm uppercase mb-1">EX1LES</h1>
-              <p className="text-zinc-400 text-xs tracking-widest uppercase">Admin Access</p>
+              <h1 className="font-bold tracking-[0.4em] text-sm uppercase mb-1">
+                EX1LES
+              </h1>
+              <p className="text-zinc-400 text-xs tracking-widest uppercase">
+                Admin Access
+              </p>
             </div>
           </div>
           <div className="space-y-3">
@@ -401,13 +446,12 @@ export default function EditProductsPage() {
   // ── MAIN ──
   return (
     <div className="min-h-screen bg-white text-zinc-900">
-
       <AdminNav role={role} onLogout={handleLogout} email={myEmail} />
 
       <div className="max-w-4xl mx-auto px-4 sm:px-8 py-10 pb-24 space-y-3">
-
         <p className="text-[10px] tracking-[0.4em] uppercase text-zinc-400 mb-6">
-          {products.length} product{products.length !== 1 ? "s" : ""} — click to expand and edit
+          {products.length} product{products.length !== 1 ? "s" : ""} — click to
+          expand and edit
         </p>
 
         {products.map((product) => {
@@ -416,10 +460,7 @@ export default function EditProductsPage() {
           if (!ed) return null;
 
           return (
-            <div
-              key={product.id}
-              className="glass rounded-2xl overflow-hidden"
-            >
+            <div key={product.id} className="glass rounded-2xl overflow-hidden">
               {/* ROW HEADER */}
               <div
                 className="flex items-center gap-4 px-5 py-4 cursor-pointer hover:bg-zinc-900/[0.03] transition-colors"
@@ -436,10 +477,13 @@ export default function EditProductsPage() {
                 </div>
 
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-zinc-900 font-medium truncate">{product.name}</p>
+                  <p className="text-sm text-zinc-900 font-medium truncate">
+                    {product.name}
+                  </p>
                   <p className="text-xs text-zinc-500 mt-0.5">
                     ₦{(product.price / 100).toLocaleString()} &nbsp;·&nbsp;{" "}
-                    {product.variants.length} size{product.variants.length !== 1 ? "s" : ""}
+                    {product.variants.length} size
+                    {product.variants.length !== 1 ? "s" : ""}
                     {product.is_featured && (
                       <span className="ml-2 text-[10px] bg-zinc-900/5 text-zinc-600 px-2 py-0.5 rounded-full">
                         New Arrival
@@ -448,7 +492,10 @@ export default function EditProductsPage() {
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                <div
+                  className="flex items-center gap-2"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   {saved === product.id && (
                     <span className="flex items-center gap-1 text-emerald-600 text-[10px]">
                       <CheckCircle size={12} /> Saved
@@ -464,9 +511,15 @@ export default function EditProductsPage() {
                 </div>
 
                 {isOpen ? (
-                  <ChevronUp size={16} className="text-zinc-400 flex-shrink-0" />
+                  <ChevronUp
+                    size={16}
+                    className="text-zinc-400 flex-shrink-0"
+                  />
                 ) : (
-                  <ChevronDown size={16} className="text-zinc-400 flex-shrink-0" />
+                  <ChevronDown
+                    size={16}
+                    className="text-zinc-400 flex-shrink-0"
+                  />
                 )}
               </div>
 
@@ -474,7 +527,6 @@ export default function EditProductsPage() {
               {isOpen && (
                 <div className="border-t border-zinc-900/10 px-5 py-6 space-y-6">
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
                     {/* LEFT */}
                     <div className="space-y-4">
                       <div>
@@ -486,19 +538,29 @@ export default function EditProductsPage() {
                             type="text"
                             placeholder="Product Name *"
                             value={ed.name}
-                            onChange={(e) => updateField(product.id, "name", e.target.value)}
+                            onChange={(e) =>
+                              updateField(product.id, "name", e.target.value)
+                            }
                             className={inputClass}
                           />
                           <textarea
                             placeholder="Description"
                             value={ed.description}
-                            onChange={(e) => updateField(product.id, "description", e.target.value)}
+                            onChange={(e) =>
+                              updateField(
+                                product.id,
+                                "description",
+                                e.target.value,
+                              )
+                            }
                             rows={3}
                             className={`${inputClass} resize-none`}
                           />
                           <div className="grid grid-cols-2 gap-3">
                             <div className="relative">
-                              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 text-sm">₦</span>
+                              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 text-sm">
+                                ₦
+                              </span>
                               <input
                                 type="number"
                                 placeholder="Price"
@@ -507,7 +569,9 @@ export default function EditProductsPage() {
                                   updateField(
                                     product.id,
                                     "price",
-                                    Math.round(parseFloat(e.target.value || "0") * 100)
+                                    Math.round(
+                                      parseFloat(e.target.value || "0") * 100,
+                                    ),
                                   )
                                 }
                                 className={`${inputClass} pl-8`}
@@ -515,12 +579,20 @@ export default function EditProductsPage() {
                             </div>
                             <select
                               value={ed.category_id}
-                              onChange={(e) => updateField(product.id, "category_id", e.target.value)}
+                              onChange={(e) =>
+                                updateField(
+                                  product.id,
+                                  "category_id",
+                                  e.target.value,
+                                )
+                              }
                               className={inputClass}
                             >
                               <option value="">Category</option>
                               {categories.map((cat) => (
-                                <option key={cat.id} value={cat.id}>{cat.name}</option>
+                                <option key={cat.id} value={cat.id}>
+                                  {cat.name}
+                                </option>
                               ))}
                             </select>
                           </div>
@@ -534,17 +606,40 @@ export default function EditProductsPage() {
                               />
                             </div>
                             <div>
-                              <p className="text-xs text-zinc-900">Mark as New Arrival</p>
-                              <p className="text-[10px] text-zinc-400">Shows &quot;New&quot; badge on product card</p>
+                              <p className="text-xs text-zinc-900">
+                                Mark as New Arrival
+                              </p>
+                              <p className="text-[10px] text-zinc-400">
+                                Shows &quot;New&quot; badge on product card
+                              </p>
                             </div>
                             <input
                               type="checkbox"
                               checked={ed.is_featured}
-                              onChange={(e) => updateField(product.id, "is_featured", e.target.checked)}
+                              onChange={(e) =>
+                                updateField(
+                                  product.id,
+                                  "is_featured",
+                                  e.target.checked,
+                                )
+                              }
                               className="hidden"
                             />
                           </label>
                         </div>
+                      </div>
+
+                      {/* Colors */}
+                      <div>
+                        <p className="text-[10px] tracking-[0.4em] uppercase text-amber-700 font-medium mb-3">
+                          Colors
+                        </p>
+                        <ColorsEditor
+                          colors={ed.colors}
+                          onChange={(colors) =>
+                            updateField(product.id, "colors", colors)
+                          }
+                        />
                       </div>
 
                       {/* Sizes & Stock */}
@@ -554,11 +649,15 @@ export default function EditProductsPage() {
                         </p>
                         <div className="flex gap-2 flex-wrap mb-3">
                           {ALL_SIZES.map((size) => {
-                            const active = ed.variants.find((v) => v.size === size);
+                            const active = ed.variants.find(
+                              (v) => v.size === size,
+                            );
                             return (
                               <button
                                 key={size}
-                                onClick={() => toggleVariantSize(product.id, size)}
+                                onClick={() =>
+                                  toggleVariantSize(product.id, size)
+                                }
                                 className={`w-12 h-12 rounded-xl text-xs font-medium transition-all ${
                                   active
                                     ? "bg-zinc-900 text-white"
@@ -572,14 +671,23 @@ export default function EditProductsPage() {
                         </div>
                         <div className="space-y-2">
                           {ed.variants.map((v, idx) => (
-                            <div key={v.size} className="flex items-center gap-3">
-                              <span className="text-xs text-zinc-500 w-8 text-center font-medium">{v.size}</span>
+                            <div
+                              key={v.size}
+                              className="flex items-center gap-3"
+                            >
+                              <span className="text-xs text-zinc-500 w-8 text-center font-medium">
+                                {v.size}
+                              </span>
                               <input
                                 type="number"
                                 min={0}
                                 value={v.stock}
                                 onChange={(e) =>
-                                  updateVariantStock(product.id, idx, parseInt(e.target.value) || 0)
+                                  updateVariantStock(
+                                    product.id,
+                                    idx,
+                                    parseInt(e.target.value) || 0,
+                                  )
                                 }
                                 className={`${inputClass} flex-1`}
                                 placeholder="Stock"
@@ -601,7 +709,9 @@ export default function EditProductsPage() {
                         </p>
                         <ImageUploadField
                           value={ed.image_url}
-                          onChange={(url) => updateField(product.id, "image_url", url)}
+                          onChange={(url) =>
+                            updateField(product.id, "image_url", url)
+                          }
                           previewClassName="h-40"
                         />
                       </div>
@@ -624,7 +734,9 @@ export default function EditProductsPage() {
                               <div className="flex-1">
                                 <ImageUploadField
                                   value={img.image_url}
-                                  onChange={(url) => updateImageUrl(product.id, idx, url)}
+                                  onChange={(url) =>
+                                    updateImageUrl(product.id, idx, url)
+                                  }
                                   placeholder={`Image ${idx + 1} — upload or paste a URL`}
                                   previewClassName="h-20"
                                 />
@@ -657,7 +769,8 @@ export default function EditProductsPage() {
                     </button>
                     {saved === product.id && (
                       <p className="text-emerald-600 text-[10px] tracking-wide text-center mt-3 flex items-center justify-center gap-1">
-                        <CheckCircle size={11} /> Changes saved — live on shop now
+                        <CheckCircle size={11} /> Changes saved — live on shop
+                        now
                       </p>
                     )}
                   </div>
