@@ -176,7 +176,9 @@ export default function LandingPage() {
       name: product.name,
       image_url: product.image_url,
       size: defaultVariant.size,
-      price: product.price + (defaultVariant.size === "3XL" ? THREE_XL_SURCHARGE : 0),
+      price:
+        product.price +
+        (defaultVariant.size === "3XL" ? THREE_XL_SURCHARGE : 0),
       quantity: 1,
     });
 

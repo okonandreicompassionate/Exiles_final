@@ -403,7 +403,8 @@ export default function CartPage() {
                               {item.name}
                             </h2>
                             <p className="text-zinc-500 text-xs mt-0.5">
-                              Size {item.size}{item.size === "3XL" ? " · +₦5,000" : ""}
+                              Size {item.size}
+                              {item.size === "3XL" ? " · +₦5,000" : ""}
                               {item.color ? ` · Color ${item.color}` : ""}
                             </p>
                           </div>

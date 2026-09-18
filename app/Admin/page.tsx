@@ -16,7 +16,8 @@ type AdminRole = "god" | "admin";
 
 const ALL_SIZES = ["XS", "S", "M", "L", "XL", "XXL", "3XL"];
 
-const inputClass = "w-full glass-input text-zinc-900 text-sm px-4 py-3 rounded-xl outline-none transition-colors placeholder-zinc-400";
+const inputClass =
+  "w-full glass-input text-zinc-900 text-sm px-4 py-3 rounded-xl outline-none transition-colors placeholder-zinc-400";
 
 export default function AdminPage() {
   const router = useRouter();
@@ -60,19 +61,28 @@ export default function AdminPage() {
   // SUPABASE_SERVICE_ROLE_KEY on this deployment) instead of masking every
   // failure as "not an admin".
   async function fetchMyAdminRow(
-    accessToken: string
-  ): Promise<{ admin: { role: AdminRole; email: string } | null; error: string | null }> {
+    accessToken: string,
+  ): Promise<{
+    admin: { role: AdminRole; email: string } | null;
+    error: string | null;
+  }> {
     try {
       const res = await fetch("/api/admin/me", {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
       const json = await res.json();
       if (!res.ok) {
-        return { admin: null, error: json.error ?? `Request failed (${res.status})` };
+        return {
+          admin: null,
+          error: json.error ?? `Request failed (${res.status})`,
+        };
       }
       return { admin: json.admin ?? null, error: null };
     } catch (err) {
-      return { admin: null, error: err instanceof Error ? err.message : "Network error" };
+      return {
+        admin: null,
+        error: err instanceof Error ? err.message : "Network error",
+      };
     }
   }
 
@@ -113,13 +123,18 @@ export default function AdminPage() {
 
   async function fetchCategories() {
     if (!supabase) return;
-    const { data, error } = await supabase.from("categories").select("id, name, slug");
+    const { data, error } = await supabase
+      .from("categories")
+      .select("id, name, slug");
     if (error) {
       showToast(`Failed to load categories: ${error.message}`, "error");
       return;
     }
     if ((data ?? []).length === 0) {
-      showToast("No categories found — run the seed insert in supabase/schema.sql", "error");
+      showToast(
+        "No categories found — run the seed insert in supabase/schema.sql",
+        "error",
+      );
     }
     setCategories(data ?? []);
   }
@@ -131,7 +146,10 @@ export default function AdminPage() {
 
   async function handleLogin() {
     if (!supabase) {
-      showToast("Supabase is not configured. Add your environment variables first.", "error");
+      showToast(
+        "Supabase is not configured. Add your environment variables first.",
+        "error",
+      );
       return;
     }
     if (!loginEmail || !loginPassword) {
@@ -152,13 +170,17 @@ export default function AdminPage() {
       return;
     }
 
-    const { admin: adminRow, error: adminErr } = await fetchMyAdminRow(data.session.access_token);
+    const { admin: adminRow, error: adminErr } = await fetchMyAdminRow(
+      data.session.access_token,
+    );
 
     if (!adminRow) {
       await supabase.auth.signOut();
       showToast(
-        adminErr && adminErr !== "Not an admin" ? `Admin check failed: ${adminErr}` : "This account is not an admin",
-        "error"
+        adminErr && adminErr !== "Not an admin"
+          ? `Admin check failed: ${adminErr}`
+          : "This account is not an admin",
+        "error",
       );
       setLoginLoading(false);
       return;
@@ -178,11 +200,16 @@ export default function AdminPage() {
     router.push("/Admin");
   }
 
-  function handleFormChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) {
+  function handleFormChange(
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >,
+  ) {
     const target = e.target;
-    const value = target instanceof HTMLInputElement && target.type === "checkbox"
-      ? target.checked
-      : target.value;
+    const value =
+      target instanceof HTMLInputElement && target.type === "checkbox"
+        ? target.checked
+        : target.value;
     setForm({ ...form, [target.name]: value });
   }
 
@@ -197,9 +224,11 @@ export default function AdminPage() {
     if (exists) {
       setSizes(sizes.filter((s) => s.size !== size));
     } else {
-      setSizes([...sizes, { size, stock: 0 }].sort(
-        (a, b) => ALL_SIZES.indexOf(a.size) - ALL_SIZES.indexOf(b.size)
-      ));
+      setSizes(
+        [...sizes, { size, stock: 0 }].sort(
+          (a, b) => ALL_SIZES.indexOf(a.size) - ALL_SIZES.indexOf(b.size),
+        ),
+      );
     }
   }
 
@@ -219,7 +248,10 @@ export default function AdminPage() {
 
   async function handleSubmit() {
     if (!supabase) {
-      showToast("Supabase is not configured. Add your environment variables first.", "error");
+      showToast(
+        "Supabase is not configured. Add your environment variables first.",
+        "error",
+      );
       return;
     }
 
@@ -258,15 +290,13 @@ export default function AdminPage() {
         return;
       }
 
-      const { error: variantError } = await supabase
-        .from("variants")
-        .insert(
-          sizes.map((s) => ({
-            product_id: product.id,
-            size: s.size,
-            stock: s.stock,
-          }))
-        );
+      const { error: variantError } = await supabase.from("variants").insert(
+        sizes.map((s) => ({
+          product_id: product.id,
+          size: s.size,
+          stock: s.stock,
+        })),
+      );
 
       if (variantError) {
         showToast("Failed to add variants: " + variantError.message, "error");
@@ -286,7 +316,7 @@ export default function AdminPage() {
               product_id: product.id,
               image_url: i.url,
               position: i.idx,
-            }))
+            })),
           );
 
         if (imageError) {
@@ -316,7 +346,6 @@ export default function AdminPage() {
       setImages(["", "", ""]);
       setColors([]);
       setTimeout(() => setSuccess(false), 3000);
-
     } catch (err) {
       console.error(err);
       showToast("Something went wrong!", "error");
@@ -340,8 +369,12 @@ export default function AdminPage() {
           <div className="text-center flex flex-col items-center gap-3">
             <Logo showText={false} markClassName="h-10" />
             <div>
-              <h1 className="font-bold tracking-[0.4em] text-sm uppercase mb-1">EX1LES</h1>
-              <p className="text-zinc-400 text-xs tracking-widest uppercase">Admin Access</p>
+              <h1 className="font-bold tracking-[0.4em] text-sm uppercase mb-1">
+                EX1LES
+              </h1>
+              <p className="text-zinc-400 text-xs tracking-widest uppercase">
+                Admin Access
+              </p>
             </div>
           </div>
           <div className="space-y-3">
@@ -378,11 +411,9 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-white text-zinc-900">
-
       <AdminNav role={role} onLogout={handleLogout} email={myEmail} />
 
       <div className="max-w-4xl mx-auto px-4 sm:px-8 py-10 pb-24">
-
         {/* SUCCESS BANNER */}
         {success && (
           <div className="flex items-center gap-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 px-4 py-3 rounded-xl mb-6 text-sm">
@@ -392,10 +423,8 @@ export default function AdminPage() {
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-
           {/* LEFT — BASIC INFO */}
           <div className="space-y-6">
-
             {/* PRODUCT INFO */}
             <div>
               <p className="text-[10px] tracking-[0.4em] uppercase text-amber-700 font-medium mb-4">
@@ -423,7 +452,9 @@ export default function AdminPage() {
                 <div className="grid grid-cols-2 gap-3">
                   {/* PRICE */}
                   <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 text-sm">₦</span>
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 text-sm">
+                      ₦
+                    </span>
                     <input
                       type="number"
                       name="price"
@@ -452,12 +483,18 @@ export default function AdminPage() {
 
                 {/* FEATURED TOGGLE */}
                 <label className="flex items-center gap-3 px-4 py-3 glass rounded-xl cursor-pointer hover:bg-zinc-900/5 transition-colors">
-                  <div className={`w-10 h-5 rounded-full transition-colors relative ${form.is_featured ? "bg-zinc-900" : "bg-zinc-300"}`}>
-                    <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all ${form.is_featured ? "left-5" : "left-0.5"}`} />
+                  <div
+                    className={`w-10 h-5 rounded-full transition-colors relative ${form.is_featured ? "bg-zinc-900" : "bg-zinc-300"}`}
+                  >
+                    <div
+                      className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all ${form.is_featured ? "left-5" : "left-0.5"}`}
+                    />
                   </div>
                   <div>
                     <p className="text-xs text-zinc-900">Mark as New Arrival</p>
-                    <p className="text-[10px] text-zinc-400">Shows &quot;New&quot; badge on product card</p>
+                    <p className="text-[10px] text-zinc-400">
+                      Shows &quot;New&quot; badge on product card
+                    </p>
                   </div>
                   <input
                     type="checkbox"
@@ -499,7 +536,9 @@ export default function AdminPage() {
                       }`}
                     >
                       <span>{size}</span>
-                      {size === "3XL" && <span className="text-[8px]">+₦5K</span>}
+                      {size === "3XL" && (
+                        <span className="text-[8px]">+₦5K</span>
+                      )}
                     </button>
                   );
                 })}
@@ -509,12 +548,16 @@ export default function AdminPage() {
               <div className="space-y-2">
                 {sizes.map((s, idx) => (
                   <div key={s.size} className="flex items-center gap-3">
-                    <span className="text-xs text-zinc-500 w-8 text-center font-medium">{s.size}</span>
+                    <span className="text-xs text-zinc-500 w-8 text-center font-medium">
+                      {s.size}
+                    </span>
                     <input
                       type="number"
                       min={0}
                       value={s.stock}
-                      onChange={(e) => handleSizeStock(idx, parseInt(e.target.value) || 0)}
+                      onChange={(e) =>
+                        handleSizeStock(idx, parseInt(e.target.value) || 0)
+                      }
                       className={`${inputClass} flex-1`}
                       placeholder="Stock quantity"
                     />
@@ -525,12 +568,10 @@ export default function AdminPage() {
                 ))}
               </div>
             </div>
-
           </div>
 
           {/* RIGHT — IMAGES */}
           <div className="space-y-6">
-
             {/* MAIN IMAGE */}
             <div>
               <p className="text-[10px] tracking-[0.4em] uppercase text-amber-700 font-medium mb-4">
@@ -579,7 +620,6 @@ export default function AdminPage() {
                 ))}
               </div>
             </div>
-
           </div>
         </div>
 
@@ -600,7 +640,6 @@ export default function AdminPage() {
             Product goes live instantly after adding
           </p>
         </div>
-
       </div>
     </div>
   );

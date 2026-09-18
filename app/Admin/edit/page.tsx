@@ -63,9 +63,7 @@ export default function EditProductsPage() {
   // the same path the /api/admin/* routes use. Surfaces the real error (e.g.
   // a missing SUPABASE_SERVICE_ROLE_KEY on this deployment) instead of
   // masking every failure as "not an admin".
-  async function fetchMyAdminRow(
-    accessToken: string,
-  ): Promise<{
+  async function fetchMyAdminRow(accessToken: string): Promise<{
     admin: { role: "god" | "admin"; email: string } | null;
     error: string | null;
   }> {
@@ -665,7 +663,9 @@ export default function EditProductsPage() {
                                 }`}
                               >
                                 <span>{size}</span>
-                                {size === "3XL" && <span className="text-[8px]">+₦5K</span>}
+                                {size === "3XL" && (
+                                  <span className="text-[8px]">+₦5K</span>
+                                )}
                               </button>
                             );
                           })}

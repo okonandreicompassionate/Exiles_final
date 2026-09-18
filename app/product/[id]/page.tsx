@@ -68,7 +68,8 @@ export default function ProductPage() {
 
       const { data, error } = await supabase
         .from("products")
-        .select(`
+        .select(
+          `
           id,
           name,
           description,
@@ -78,7 +79,8 @@ export default function ProductPage() {
           categories ( name ),
           variants ( id, size, stock ),
           product_images ( id, image_url, position )
-        `)
+        `,
+        )
         .eq("id", params.id)
         .single();
 
@@ -89,13 +91,15 @@ export default function ProductPage() {
       }
 
       const sorted = [...(data.product_images ?? [])].sort(
-        (a, b) => a.position - b.position
+        (a, b) => a.position - b.position,
       );
 
       // supabase-js's loose inference types embeds as arrays regardless of
       // FK direction; at runtime this one is an object (many-to-one).
       // Normalize defensively rather than trust either shape blindly.
-      const categories = Array.isArray(data.categories) ? data.categories[0] ?? null : data.categories;
+      const categories = Array.isArray(data.categories)
+        ? (data.categories[0] ?? null)
+        : data.categories;
 
       const colors = data.colors ?? [];
 
@@ -149,7 +153,7 @@ export default function ProductPage() {
     toggleWishlist(product.id);
     showToast(
       wasWishlisted ? "Removed from wishlist" : "Saved to wishlist",
-      "info"
+      "info",
     );
   };
 
@@ -183,8 +187,13 @@ export default function ProductPage() {
     return (
       <div className="min-h-screen bg-white text-zinc-900 flex items-center justify-center">
         <div className="text-center space-y-4">
-          <p className="text-zinc-500 text-xs tracking-[0.3em] uppercase">Product not found</p>
-          <Link href="/shop" className="text-xs tracking-widest uppercase text-zinc-600 hover:text-zinc-900 transition-colors glass px-6 py-3 rounded-xl inline-block hover:bg-zinc-900/5">
+          <p className="text-zinc-500 text-xs tracking-[0.3em] uppercase">
+            Product not found
+          </p>
+          <Link
+            href="/shop"
+            className="text-xs tracking-widest uppercase text-zinc-600 hover:text-zinc-900 transition-colors glass px-6 py-3 rounded-xl inline-block hover:bg-zinc-900/5"
+          >
             Back to Shop
           </Link>
         </div>
@@ -199,7 +208,6 @@ export default function ProductPage() {
 
   return (
     <div className="bg-white min-h-screen text-zinc-900">
-
       {/* NAV */}
       <nav className="fixed top-0 left-0 right-0 z-50 glass-nav">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-8 py-4 flex items-center">
@@ -225,9 +233,18 @@ export default function ProductPage() {
               className="text-zinc-600 hover:text-zinc-900 transition-colors"
               aria-label="Toggle wishlist"
             >
-              <Heart size={18} strokeWidth={1.5} className={isWishlisted(product.id) ? "fill-red-500 text-red-500" : ""} />
+              <Heart
+                size={18}
+                strokeWidth={1.5}
+                className={
+                  isWishlisted(product.id) ? "fill-red-500 text-red-500" : ""
+                }
+              />
             </button>
-            <Link href="/cart" className="relative text-zinc-600 hover:text-zinc-900 transition-colors">
+            <Link
+              href="/cart"
+              className="relative text-zinc-600 hover:text-zinc-900 transition-colors"
+            >
               <ShoppingCart size={18} strokeWidth={1.5} />
               {cartItems.length > 0 && (
                 <span className="absolute -top-2 -right-2 w-4 h-4 bg-zinc-900 text-white text-[10px] rounded-full flex items-center justify-center font-bold">
@@ -242,21 +259,25 @@ export default function ProductPage() {
       {/* BREADCRUMB */}
       <div className="max-w-[1400px] mx-auto px-4 sm:px-8 pt-24 pb-4">
         <div className="flex items-center gap-2 text-[10px] tracking-widest uppercase text-zinc-400">
-          <Link href="/shop" className="hover:text-zinc-700 transition-colors">Shop</Link>
+          <Link href="/shop" className="hover:text-zinc-700 transition-colors">
+            Shop
+          </Link>
           <ChevronRight size={10} />
-          <span className="text-zinc-500">{product.categories?.name ?? "Product"}</span>
+          <span className="text-zinc-500">
+            {product.categories?.name ?? "Product"}
+          </span>
           <ChevronRight size={10} />
-          <span className="text-zinc-600 truncate max-w-[200px]">{product.name}</span>
+          <span className="text-zinc-600 truncate max-w-[200px]">
+            {product.name}
+          </span>
         </div>
       </div>
 
       {/* MAIN CONTENT */}
       <div className="max-w-[1400px] mx-auto px-4 sm:px-8 pb-28 lg:pb-20">
         <div className="grid md:grid-cols-2 gap-8 lg:gap-16">
-
           {/* LEFT — IMAGE GALLERY */}
           <div className="flex gap-3">
-
             {/* THUMBNAILS — vertical strip */}
             {gallery.length > 1 && (
               <div className="hidden sm:flex flex-col gap-2 w-16 flex-shrink-0">
@@ -307,10 +328,17 @@ export default function ProductPage() {
                       key={img.id}
                       onClick={() => handleThumb(img, idx)}
                       className={`w-12 h-12 rounded-lg overflow-hidden border-2 transition-all ${
-                        activeThumb === idx ? "border-zinc-900/60" : "border-zinc-900/10 opacity-50"
+                        activeThumb === idx
+                          ? "border-zinc-900/60"
+                          : "border-zinc-900/10 opacity-50"
                       }`}
                     >
-                      <img src={img.image_url} alt="" loading="lazy" className="w-full h-full object-cover" />
+                      <img
+                        src={img.image_url}
+                        alt=""
+                        loading="lazy"
+                        className="w-full h-full object-cover"
+                      />
                     </button>
                   ))}
                 </div>
@@ -320,7 +348,6 @@ export default function ProductPage() {
 
           {/* RIGHT — PRODUCT INFO */}
           <div className="flex flex-col gap-6 md:pt-4">
-
             {/* CATEGORY + NAME + PRICE */}
             <div>
               <p className="text-[10px] tracking-[0.4em] uppercase text-zinc-500 mb-2">
@@ -331,8 +358,15 @@ export default function ProductPage() {
               </h1>
               <div className="flex items-baseline gap-3 mt-3">
                 <p className="text-2xl font-semibold text-zinc-900">
-                  ₦{(priceForSize(product.price, selectedVariant?.size) / 100).toLocaleString()}
-                  {selectedVariant?.size === "3XL" && <span className="text-xs text-amber-700 ml-2">3XL +₦5,000</span>}
+                  ₦
+                  {(
+                    priceForSize(product.price, selectedVariant?.size) / 100
+                  ).toLocaleString()}
+                  {selectedVariant?.size === "3XL" && (
+                    <span className="text-xs text-amber-700 ml-2">
+                      3XL +₦5,000
+                    </span>
+                  )}
                 </p>
               </div>
             </div>
@@ -345,7 +379,11 @@ export default function ProductPage() {
               <div>
                 <p className="text-xs tracking-[0.2em] uppercase text-zinc-500 mb-3">
                   Select Color
-                  {selectedColor && <span className="text-zinc-900 ml-2">— {selectedColor}</span>}
+                  {selectedColor && (
+                    <span className="text-zinc-900 ml-2">
+                      — {selectedColor}
+                    </span>
+                  )}
                 </p>
                 <div className="flex gap-2 flex-wrap">
                   {product.colors.map((color) => {
@@ -363,7 +401,11 @@ export default function ProductPage() {
                       >
                         <span
                           className="w-5 h-5 rounded-full border border-zinc-900/15 flex-shrink-0"
-                          style={{ backgroundColor: color.toLowerCase().replace(/\s+/g, "") }}
+                          style={{
+                            backgroundColor: color
+                              .toLowerCase()
+                              .replace(/\s+/g, ""),
+                          }}
                         />
                         {color}
                       </button>
@@ -379,7 +421,9 @@ export default function ProductPage() {
                 <p className="text-xs tracking-[0.2em] uppercase text-zinc-500">
                   Select Size
                   {selectedVariant && (
-                    <span className="text-zinc-900 ml-2">— {selectedVariant.size}</span>
+                    <span className="text-zinc-900 ml-2">
+                      — {selectedVariant.size}
+                    </span>
                   )}
                 </p>
                 <button className="text-[10px] tracking-widest uppercase text-zinc-400 hover:text-zinc-700 transition-colors underline underline-offset-2">
@@ -400,12 +444,16 @@ export default function ProductPage() {
                         outOfStock
                           ? "glass text-zinc-300 cursor-not-allowed opacity-60"
                           : isSelected
-                          ? "bg-zinc-900 text-white border-2 border-zinc-900 shadow-lg shadow-zinc-900/10"
-                          : "glass text-zinc-600 hover:border-zinc-900/30 hover:text-zinc-900"
+                            ? "bg-zinc-900 text-white border-2 border-zinc-900 shadow-lg shadow-zinc-900/10"
+                            : "glass text-zinc-600 hover:border-zinc-900/30 hover:text-zinc-900"
                       }`}
                     >
                       <span>{variant.size}</span>
-                      {variant.size === "3XL" && <span className="absolute -bottom-4 left-1/2 -translate-x-1/2 whitespace-nowrap text-[8px] text-amber-700">+₦5K</span>}
+                      {variant.size === "3XL" && (
+                        <span className="absolute -bottom-4 left-1/2 -translate-x-1/2 whitespace-nowrap text-[8px] text-amber-700">
+                          +₦5K
+                        </span>
+                      )}
                       {outOfStock && (
                         <span className="absolute inset-0 flex items-center justify-center">
                           <span className="w-8 h-px bg-zinc-300 rotate-45 absolute" />
@@ -416,11 +464,13 @@ export default function ProductPage() {
                 })}
               </div>
 
-              {selectedVariant && selectedVariant.stock > 0 && selectedVariant.stock <= 3 && (
-                <p className="text-[10px] text-red-500 mt-3 uppercase tracking-widest">
-                  Only {selectedVariant.stock} left in stock
-                </p>
-              )}
+              {selectedVariant &&
+                selectedVariant.stock > 0 &&
+                selectedVariant.stock <= 3 && (
+                  <p className="text-[10px] text-red-500 mt-3 uppercase tracking-widest">
+                    Only {selectedVariant.stock} left in stock
+                  </p>
+                )}
             </div>
 
             {/* ADD TO CART — desktop/inline */}
@@ -432,24 +482,29 @@ export default function ProductPage() {
                   added
                     ? "bg-emerald-600 text-white cursor-not-allowed"
                     : !readyToAdd
-                    ? "glass text-zinc-400 cursor-not-allowed"
-                    : "bg-zinc-900 text-white hover:bg-zinc-700 shadow-lg shadow-zinc-900/10"
+                      ? "glass text-zinc-400 cursor-not-allowed"
+                      : "bg-zinc-900 text-white hover:bg-zinc-700 shadow-lg shadow-zinc-900/10"
                 }`}
               >
                 {added
                   ? "✓ Added to Bag"
                   : needsColor && !selectedColor
-                  ? "Select a Color"
-                  : !selectedVariant
-                  ? "Select a Size"
-                  : "Add to Bag"}
+                    ? "Select a Color"
+                    : !selectedVariant
+                      ? "Select a Size"
+                      : "Add to Bag"}
               </button>
               <button
                 onClick={handleWishlistToggle}
                 className="w-14 h-14 rounded-2xl glass text-zinc-800 flex items-center justify-center hover:bg-zinc-900/5 transition-colors flex-shrink-0"
                 aria-label="Toggle wishlist"
               >
-                <Heart size={18} className={isWishlisted(product.id) ? "fill-red-500 text-red-500" : ""} />
+                <Heart
+                  size={18}
+                  className={
+                    isWishlisted(product.id) ? "fill-red-500 text-red-500" : ""
+                  }
+                />
               </button>
             </div>
 
@@ -470,24 +525,33 @@ export default function ProductPage() {
               {/* DETAILS GRID */}
               <div className="grid grid-cols-2 gap-3 mt-4">
                 <div className="glass rounded-xl p-4">
-                  <p className="text-[9px] tracking-[0.3em] uppercase text-zinc-500 mb-1">Delivery</p>
-                  <p className="text-xs text-zinc-700">3–4 working days after drop</p>
+                  <p className="text-[9px] tracking-[0.3em] uppercase text-zinc-500 mb-1">
+                    Delivery
+                  </p>
+                  <p className="text-xs text-zinc-700">
+                    3–4 working days after drop
+                  </p>
                 </div>
                 <div className="glass rounded-xl p-4">
-                  <p className="text-[9px] tracking-[0.3em] uppercase text-zinc-500 mb-1">Returns</p>
+                  <p className="text-[9px] tracking-[0.3em] uppercase text-zinc-500 mb-1">
+                    Returns
+                  </p>
                   <p className="text-xs text-zinc-700">2 day policy</p>
                 </div>
                 <div className="glass rounded-xl p-4">
-                  <p className="text-[9px] tracking-[0.3em] uppercase text-zinc-500 mb-1">Material</p>
+                  <p className="text-[9px] tracking-[0.3em] uppercase text-zinc-500 mb-1">
+                    Material
+                  </p>
                   <p className="text-xs text-zinc-700">Premium quality</p>
                 </div>
                 <div className="glass rounded-xl p-4">
-                  <p className="text-[9px] tracking-[0.3em] uppercase text-zinc-500 mb-1">Origin</p>
+                  <p className="text-[9px] tracking-[0.3em] uppercase text-zinc-500 mb-1">
+                    Origin
+                  </p>
                   <p className="text-xs text-zinc-700">EX1LES Studio</p>
                 </div>
               </div>
             </div>
-
           </div>
         </div>
       </div>
@@ -499,7 +563,12 @@ export default function ProductPage() {
           className="w-14 h-14 rounded-2xl glass text-zinc-800 flex items-center justify-center flex-shrink-0"
           aria-label="Toggle wishlist"
         >
-          <Heart size={18} className={isWishlisted(product.id) ? "fill-red-500 text-red-500" : ""} />
+          <Heart
+            size={18}
+            className={
+              isWishlisted(product.id) ? "fill-red-500 text-red-500" : ""
+            }
+          />
         </button>
         <button
           onClick={handleAddToCart}
@@ -508,17 +577,17 @@ export default function ProductPage() {
             added
               ? "bg-emerald-600 text-white cursor-not-allowed"
               : !readyToAdd
-              ? "glass text-zinc-400 cursor-not-allowed"
-              : "bg-zinc-900 text-white hover:bg-zinc-700 shadow-lg shadow-zinc-900/10"
+                ? "glass text-zinc-400 cursor-not-allowed"
+                : "bg-zinc-900 text-white hover:bg-zinc-700 shadow-lg shadow-zinc-900/10"
           }`}
         >
           {added
             ? "✓ Added to Bag"
             : needsColor && !selectedColor
-            ? "Select a Color"
-            : !selectedVariant
-            ? "Select a Size"
-            : `Add to Bag — ₦${(priceForSize(product.price, selectedVariant?.size) / 100).toLocaleString()}`}
+              ? "Select a Color"
+              : !selectedVariant
+                ? "Select a Size"
+                : `Add to Bag — ₦${(priceForSize(product.price, selectedVariant?.size) / 100).toLocaleString()}`}
         </button>
       </div>
 

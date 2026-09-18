@@ -89,7 +89,8 @@ I have completed payment.
 
           <h1 className="text-3xl font-bold">Pay Directly by Transfer</h1>
           <p className="mt-2 text-sm text-zinc-600 leading-relaxed">
-            Transfer the exact total below, then tap the button to send your payment proof on WhatsApp.
+            Transfer the exact total below, then tap the button to send your
+            payment proof on WhatsApp.
           </p>
           <p className="mt-2 text-sm text-amber-700 font-semibold tracking-wide">
             Order code: {order.orderCode ?? "Pending"}
@@ -142,8 +143,8 @@ I have completed payment.
               </p>
 
               <div className="flex items-center justify-between glass rounded-2xl px-4 py-4">
-                  <span className="text-xl font-bold tracking-wider">
-                    80828268947
+                <span className="text-xl font-bold tracking-wider">
+                  80828268947
                 </span>
 
                 <button

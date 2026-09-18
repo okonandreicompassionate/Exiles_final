@@ -917,7 +917,10 @@ export default function AdminDashboardPage() {
                   <p className="text-[10px] tracking-[0.4em] uppercase text-amber-700 font-medium">
                     Recent Orders
                   </p>
-                  <p className="text-xs text-zinc-400 mt-1">Search by order code, name, phone, or state. Click any order for full details.</p>
+                  <p className="text-xs text-zinc-400 mt-1">
+                    Search by order code, name, phone, or state. Click any order
+                    for full details.
+                  </p>
                 </div>
                 <input
                   type="search"
@@ -960,7 +963,9 @@ export default function AdminDashboardPage() {
                           className="border-b border-zinc-900/5 last:border-0 hover:bg-zinc-900/[0.02] cursor-pointer"
                         >
                           <td className="py-3 px-4">
-                            <p className="text-amber-700 text-[10px] font-semibold tracking-wider">{o.orderCode}</p>
+                            <p className="text-amber-700 text-[10px] font-semibold tracking-wider">
+                              {o.orderCode}
+                            </p>
                             <p className="text-zinc-800">{o.customerName}</p>
                             <p className="text-[10px] text-zinc-400">
                               {o.customerPhone}
@@ -1037,43 +1042,114 @@ export default function AdminDashboardPage() {
           <aside className="relative w-full max-w-lg h-full overflow-y-auto bg-white shadow-2xl p-6 sm:p-8">
             <div className="flex items-start justify-between gap-4 border-b border-zinc-900/10 pb-5">
               <div>
-                <p className="text-[10px] tracking-[0.3em] uppercase text-amber-700 font-semibold">Order details</p>
-                <h2 className="text-2xl font-semibold text-zinc-900 mt-1">{selectedOrder.orderCode}</h2>
-                <p className="text-xs text-zinc-400 mt-1">{new Date(selectedOrder.createdAt).toLocaleString()}</p>
+                <p className="text-[10px] tracking-[0.3em] uppercase text-amber-700 font-semibold">
+                  Order details
+                </p>
+                <h2 className="text-2xl font-semibold text-zinc-900 mt-1">
+                  {selectedOrder.orderCode}
+                </h2>
+                <p className="text-xs text-zinc-400 mt-1">
+                  {new Date(selectedOrder.createdAt).toLocaleString()}
+                </p>
               </div>
-              <button type="button" onClick={() => setSelectedOrder(null)} className="p-2 text-zinc-400 hover:text-zinc-900" aria-label="Close">
+              <button
+                type="button"
+                onClick={() => setSelectedOrder(null)}
+                className="p-2 text-zinc-400 hover:text-zinc-900"
+                aria-label="Close"
+              >
                 <X size={18} />
               </button>
             </div>
 
             <div className="grid grid-cols-2 gap-3 py-5 text-sm">
-              <div><p className="text-[10px] uppercase tracking-widest text-zinc-400">Status</p><p className="mt-1 font-medium uppercase">{selectedOrder.status}</p></div>
-              <div><p className="text-[10px] uppercase tracking-widest text-zinc-400">Payment</p><p className="mt-1 font-medium uppercase">{selectedOrder.paymentMethod}</p></div>
-              <div className="col-span-2"><p className="text-[10px] uppercase tracking-widest text-zinc-400">Customer</p><p className="mt-1 font-medium">{selectedOrder.customerName}</p><p className="text-zinc-500">{selectedOrder.customerEmail}</p><p className="text-zinc-500">{selectedOrder.customerPhone}{selectedOrder.customerWhatsapp ? ` · WhatsApp ${selectedOrder.customerWhatsapp}` : ""}</p></div>
-              <div className="col-span-2"><p className="text-[10px] uppercase tracking-widest text-zinc-400">Delivery address</p><p className="mt-1 text-zinc-700">{selectedOrder.address}</p><p className="text-zinc-500">{selectedOrder.city ? `${selectedOrder.city}, ` : ""}{selectedOrder.state}</p></div>
+              <div>
+                <p className="text-[10px] uppercase tracking-widest text-zinc-400">
+                  Status
+                </p>
+                <p className="mt-1 font-medium uppercase">
+                  {selectedOrder.status}
+                </p>
+              </div>
+              <div>
+                <p className="text-[10px] uppercase tracking-widest text-zinc-400">
+                  Payment
+                </p>
+                <p className="mt-1 font-medium uppercase">
+                  {selectedOrder.paymentMethod}
+                </p>
+              </div>
+              <div className="col-span-2">
+                <p className="text-[10px] uppercase tracking-widest text-zinc-400">
+                  Customer
+                </p>
+                <p className="mt-1 font-medium">{selectedOrder.customerName}</p>
+                <p className="text-zinc-500">{selectedOrder.customerEmail}</p>
+                <p className="text-zinc-500">
+                  {selectedOrder.customerPhone}
+                  {selectedOrder.customerWhatsapp
+                    ? ` · WhatsApp ${selectedOrder.customerWhatsapp}`
+                    : ""}
+                </p>
+              </div>
+              <div className="col-span-2">
+                <p className="text-[10px] uppercase tracking-widest text-zinc-400">
+                  Delivery address
+                </p>
+                <p className="mt-1 text-zinc-700">{selectedOrder.address}</p>
+                <p className="text-zinc-500">
+                  {selectedOrder.city ? `${selectedOrder.city}, ` : ""}
+                  {selectedOrder.state}
+                </p>
+              </div>
             </div>
 
             <div className="border-y border-zinc-900/10 py-5 space-y-3">
-              <p className="text-[10px] uppercase tracking-widest text-zinc-400">Items</p>
+              <p className="text-[10px] uppercase tracking-widest text-zinc-400">
+                Items
+              </p>
               {selectedOrder.items.map((item, index) => (
-                <div key={`${item.name}-${index}`} className="flex justify-between gap-4 text-sm">
-                  <span>{item.name} · {item.size ?? "One size"}{item.color ? ` · ${item.color}` : ""} ×{item.quantity}</span>
-                  <span className="font-medium">{naira(item.quantity * item.price)}</span>
+                <div
+                  key={`${item.name}-${index}`}
+                  className="flex justify-between gap-4 text-sm"
+                >
+                  <span>
+                    {item.name} · {item.size ?? "One size"}
+                    {item.color ? ` · ${item.color}` : ""} ×{item.quantity}
+                  </span>
+                  <span className="font-medium">
+                    {naira(item.quantity * item.price)}
+                  </span>
                 </div>
               ))}
-              <div className="flex justify-between pt-3 border-t border-zinc-900/10 font-semibold"><span>Total</span><span>{naira(selectedOrder.total)}</span></div>
+              <div className="flex justify-between pt-3 border-t border-zinc-900/10 font-semibold">
+                <span>Total</span>
+                <span>{naira(selectedOrder.total)}</span>
+              </div>
             </div>
 
             <div className="pt-5 space-y-3">
-              <p className="text-[10px] uppercase tracking-widest text-zinc-400">Payment verification</p>
-              <p className="text-xs text-zinc-500">Confirm the transfer against this order code before marking the order paid or fulfilled.</p>
-              {selectedOrder.gatewayReference && <p className="text-xs font-mono text-zinc-600 break-all">Gateway: {selectedOrder.gatewayReference}</p>}
+              <p className="text-[10px] uppercase tracking-widest text-zinc-400">
+                Payment verification
+              </p>
+              <p className="text-xs text-zinc-500">
+                Confirm the transfer against this order code before marking the
+                order paid or fulfilled.
+              </p>
+              {selectedOrder.gatewayReference && (
+                <p className="text-xs font-mono text-zinc-600 break-all">
+                  Gateway: {selectedOrder.gatewayReference}
+                </p>
+              )}
               <select
                 value={selectedOrder.status}
                 disabled={updatingOrderId === selectedOrder.id}
                 onChange={async (e) => {
                   await updateOrderStatus(selectedOrder.id, e.target.value);
-                  setSelectedOrder({ ...selectedOrder, status: e.target.value as OrderRow["status"] });
+                  setSelectedOrder({
+                    ...selectedOrder,
+                    status: e.target.value as OrderRow["status"],
+                  });
                 }}
                 className="w-full glass-input px-4 py-3 rounded-xl text-sm uppercase tracking-widest"
               >
