@@ -10,6 +10,7 @@ import { supabase, isSupabaseConfigured } from "../../lib/supabase";
 export default function PayPage() {
   const [order, setOrder] = useState<any>(null);
   const [copied, setCopied] = useState(false);
+  const [copiedCode, setCopiedCode] = useState(false);
   const { showToast } = useToast();
   const { clearCart } = useCart();
 
@@ -30,6 +31,14 @@ export default function PayPage() {
     setTimeout(() => {
       setCopied(false);
     }, 2000);
+  };
+
+  const copyOrderCode = async () => {
+    if (!order?.orderCode) return;
+    await navigator.clipboard.writeText(order.orderCode);
+    setCopiedCode(true);
+    showToast("Order code copied", "success");
+    setTimeout(() => setCopiedCode(false), 2000);
   };
 
   if (!order) {
@@ -92,9 +101,17 @@ I have completed payment.
             Transfer the exact total below, then tap the button to send your
             payment proof on WhatsApp.
           </p>
-          <p className="mt-2 text-sm text-amber-700 font-semibold tracking-wide">
-            Order code: {order.orderCode ?? "Pending"}
-          </p>
+          <div className="mt-2 flex items-center gap-2 text-sm text-amber-700 font-semibold tracking-wide">
+            <span>Order code: {order.orderCode ?? "Pending"}</span>
+            <button
+              type="button"
+              onClick={copyOrderCode}
+              aria-label="Copy order code"
+              className="text-amber-700 hover:text-zinc-900"
+            >
+              {copiedCode ? <CheckCircle2 size={16} /> : <Copy size={16} />}
+            </button>
+          </div>
         </div>
 
         <div className="glass-strong rounded-3xl p-6 space-y-6">
@@ -190,6 +207,12 @@ I have completed payment.
           className="block text-center text-zinc-500 hover:text-zinc-900 text-xs uppercase tracking-[0.2em] mt-6 transition-colors"
         >
           Continue Shopping
+        </Link>
+        <Link
+          href={`/orders?code=${encodeURIComponent(order.orderCode ?? "")}`}
+          className="block text-center text-zinc-500 hover:text-zinc-900 text-xs uppercase tracking-[0.2em] mt-4 transition-colors"
+        >
+          Track this order
         </Link>
       </div>
     </div>

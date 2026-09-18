@@ -205,6 +205,18 @@ export default function CartPage() {
       }
 
       localStorage.setItem("pendingOrderId", order.id);
+      const savedCodes = JSON.parse(
+        localStorage.getItem("exiles-order-codes") ?? "[]",
+      );
+      const orderCodes = Array.isArray(savedCodes)
+        ? savedCodes.filter((code) => typeof code === "string")
+        : [];
+      if (!orderCodes.includes(order.order_code)) {
+        localStorage.setItem(
+          "exiles-order-codes",
+          JSON.stringify([order.order_code, ...orderCodes]),
+        );
+      }
       return { id: order.id, orderCode: order.order_code };
     } catch (err) {
       console.warn("Order recording failed:", err);
