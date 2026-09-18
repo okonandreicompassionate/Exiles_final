@@ -62,6 +62,11 @@ alter table variants enable row level security;
 alter table product_images enable row level security;
 alter table admins enable row level security;
 
+-- Older deployments stored a password hash in this table. Authentication is
+-- now handled by Supabase Auth (`auth.users`), so remove the legacy required
+-- column if this schema is being applied to an existing project.
+alter table admins drop column if exists password_hash;
+
 -- Storefront is public: anyone (including anonymous visitors) can read the
 -- catalog. Only signed-in admins can write to it.
 drop policy if exists "categories_public_read" on categories;
@@ -140,11 +145,23 @@ on conflict (slug) do nothing;
 -- matter, since the insert below just no-ops until the user exists. Re-run
 -- this file (or just this statement) after creating the user, and it'll
 -- pick them up.
-insert into admins (id, email, role)
-select id, email, 'god'
-from auth.users
-where email = 'okoncompassionate@gmail.com'
-on conflict (id) do update set role = 'god';
+do $$
+declare
+  target_id uuid;
+  target_email text := 'okoncompassionate@gmail.com';
+begin
+  select id into target_id from auth.users where email = target_email;
+
+  if target_id is not null then
+    -- Remove only a stale legacy row for this email if its id no longer
+    -- matches the Supabase Auth user. The current app authenticates by id.
+    delete from admins where email = target_email and id <> target_id;
+
+    insert into admins (id, email, role)
+    values (target_id, target_email, 'god')
+    on conflict (id) do update set email = excluded.email, role = 'god';
+  end if;
+end $$;
 
 -- Once that account exists and is promoted, sign in at /Admin. As "god"
 -- you'll see an "Admins" panel to create further admin accounts straight

@@ -76,9 +76,13 @@ begin
     );
   end if;
 
+  -- Remove only a stale legacy row for this email if its id no longer
+  -- matches the Supabase Auth user. The current app authenticates by id.
+  delete from admins where email = target_email and id <> target_id;
+
   insert into admins (id, email, role)
   values (target_id, target_email, 'god')
-  on conflict (id) do update set role = 'god';
+  on conflict (id) do update set email = excluded.email, role = 'god';
 end $$;
 
 -- Sign in at /Admin with target_email / target_password once this runs clean.

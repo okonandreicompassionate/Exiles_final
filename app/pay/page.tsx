@@ -34,7 +34,9 @@ export default function PayPage() {
     return (
       <div className="min-h-screen bg-white text-zinc-900 flex items-center justify-center gap-3">
         <div className="w-5 h-5 rounded-full border-2 border-zinc-900/15 border-t-zinc-900 animate-spin" />
-        <span className="text-sm text-zinc-500 tracking-wide">Loading order...</span>
+        <span className="text-sm text-zinc-500 tracking-wide">
+          Loading order...
+        </span>
       </div>
     );
   }
@@ -44,9 +46,17 @@ export default function PayPage() {
     if (!orderId || !isSupabaseConfigured || !supabase) return;
     // Best-effort — the WhatsApp proof is still what the admin actually
     // confirms against before fulfilling. This just gets it out of "pending".
-    supabase.from("orders").update({ status: "paid" }).eq("id", orderId).then(({ error }) => {
-      if (error) console.warn("Order status update failed (non-blocking):", error.message);
-    });
+    supabase
+      .from("orders")
+      .update({ status: "paid" })
+      .eq("id", orderId)
+      .then(({ error }) => {
+        if (error)
+          console.warn(
+            "Order status update failed (non-blocking):",
+            error.message,
+          );
+      });
   };
 
   const whatsappMessage = encodeURIComponent(`
@@ -56,6 +66,9 @@ Name: ${order.form.name}
 Phone: ${order.form.phone}
 State: ${order.form.state}
 
+Items:
+${order.cartItems.map((item: any) => `- ${item.name} | Size: ${item.size}${item.color ? ` | Color: ${item.color}` : ""} | Qty: ${item.quantity}`).join("\n")}
+
 Total: ₦${(order.total / 100).toLocaleString()}
 
 I have completed payment.
@@ -64,19 +77,15 @@ I have completed payment.
   return (
     <div className="min-h-screen bg-white text-zinc-900 px-4 py-10">
       <div className="max-w-xl mx-auto">
-
         <div className="mb-8">
           <p className="text-zinc-500 uppercase tracking-[0.3em] text-xs mb-3">
             Complete Payment
           </p>
 
-          <h1 className="text-3xl font-bold">
-            Bank Transfer
-          </h1>
+          <h1 className="text-3xl font-bold">Bank Transfer</h1>
         </div>
 
         <div className="glass-strong rounded-3xl p-6 space-y-6">
-
           <div>
             <p className="text-zinc-500 text-xs uppercase tracking-widest mb-2">
               Amount
@@ -91,24 +100,29 @@ I have completed payment.
           {Array.isArray(order.cartItems) && order.cartItems.length > 0 && (
             <div className="border-t border-zinc-900/10 pt-4 space-y-2">
               {order.cartItems.map((item: any) => (
-                <div key={`${item.id}-${item.size}`} className="flex justify-between text-xs text-zinc-500">
-                  <span className="truncate pr-2">{item.name} ({item.size}) ×{item.quantity}</span>
-                  <span className="text-zinc-700 flex-shrink-0">₦{((item.price * item.quantity) / 100).toLocaleString()}</span>
+                <div
+                  key={`${item.id}-${item.size}-${item.color ?? ""}`}
+                  className="flex justify-between text-xs text-zinc-500"
+                >
+                  <span className="truncate pr-2">
+                    {item.name} ({item.size}
+                    {item.color ? `, ${item.color}` : ""}) ×{item.quantity}
+                  </span>
+                  <span className="text-zinc-700 flex-shrink-0">
+                    ₦{((item.price * item.quantity) / 100).toLocaleString()}
+                  </span>
                 </div>
               ))}
             </div>
           )}
 
           <div className="border-t border-zinc-900/10 pt-6 space-y-4">
-
             <div>
               <p className="text-zinc-500 text-xs uppercase tracking-widest mb-1">
                 Bank
               </p>
 
-              <p className="text-lg font-medium">
-                PalmPay
-              </p>
+              <p className="text-lg font-medium">PalmPay</p>
             </div>
 
             <div>
@@ -126,7 +140,11 @@ I have completed payment.
                   className="text-zinc-500 hover:text-zinc-900 transition-colors"
                   aria-label="Copy account number"
                 >
-                  {copied ? <CheckCircle2 size={18} className="text-emerald-600" /> : <Copy size={18} />}
+                  {copied ? (
+                    <CheckCircle2 size={18} className="text-emerald-600" />
+                  ) : (
+                    <Copy size={18} />
+                  )}
                 </button>
               </div>
             </div>
@@ -136,11 +154,8 @@ I have completed payment.
                 Account Name
               </p>
 
-              <p className="text-lg font-medium">
-                Ola Okon
-              </p>
+              <p className="text-lg font-medium">Ola Okon</p>
             </div>
-
           </div>
 
           <a
@@ -153,9 +168,9 @@ I have completed payment.
           </a>
 
           <p className="text-zinc-500 text-xs text-center leading-relaxed">
-            After payment, tap the button above and send your proof of payment on WhatsApp.
+            After payment, tap the button above and send your proof of payment
+            on WhatsApp.
           </p>
-
         </div>
 
         <Link
@@ -164,7 +179,6 @@ I have completed payment.
         >
           Continue Shopping
         </Link>
-
       </div>
     </div>
   );

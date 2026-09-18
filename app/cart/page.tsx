@@ -9,12 +9,41 @@ import { Logo } from "../components/Logo";
 import { supabase, isSupabaseConfigured } from "../../lib/supabase";
 
 const NIGERIAN_STATES = [
-  "Abia", "Adamawa", "Akwa Ibom", "Anambra", "Bauchi", "Bayelsa",
-  "Benue", "Borno", "Cross River", "Delta", "Ebonyi", "Edo",
-  "Ekiti", "Enugu", "Gombe", "Imo", "Jigawa", "Kaduna", "Kano",
-  "Katsina", "Kebbi", "Kogi", "Kwara", "Nasarawa", "Niger",
-  "Ogun", "Ondo", "Osun", "Oyo", "Plateau", "Rivers",
-  "Sokoto", "Taraba", "Yobe", "Zamfara",
+  "Abia",
+  "Adamawa",
+  "Akwa Ibom",
+  "Anambra",
+  "Bauchi",
+  "Bayelsa",
+  "Benue",
+  "Borno",
+  "Cross River",
+  "Delta",
+  "Ebonyi",
+  "Edo",
+  "Ekiti",
+  "Enugu",
+  "Gombe",
+  "Imo",
+  "Jigawa",
+  "Kaduna",
+  "Kano",
+  "Katsina",
+  "Kebbi",
+  "Kogi",
+  "Kwara",
+  "Nasarawa",
+  "Niger",
+  "Ogun",
+  "Ondo",
+  "Osun",
+  "Oyo",
+  "Plateau",
+  "Rivers",
+  "Sokoto",
+  "Taraba",
+  "Yobe",
+  "Zamfara",
 ];
 
 const EXPRESS_STATES = ["Lagos", "Abuja", "Rivers"];
@@ -34,11 +63,13 @@ function getDeliveryFee(state: string): number {
 
 function getDeliveryLabel(state: string): string {
   if (!state) return "";
-  if (EXPRESS_STATES.includes(state)) return `Express Delivery — ₦${DELIVERY_PRICES[state].toLocaleString()}`;
+  if (EXPRESS_STATES.includes(state))
+    return `Express Delivery — ₦${DELIVERY_PRICES[state].toLocaleString()}`;
   return `Standard Delivery (5–7 days) — ₦${DELIVERY_PRICES.other.toLocaleString()}`;
 }
 
-const inputClass = "w-full glass-input text-zinc-900 text-sm px-4 py-3.5 rounded-xl outline-none transition-colors placeholder-zinc-400";
+const inputClass =
+  "w-full glass-input text-zinc-900 text-sm px-4 py-3.5 rounded-xl outline-none transition-colors placeholder-zinc-400";
 
 export default function CartPage() {
   const { cartItems, removeFromCart, updateQuantity } = useCart();
@@ -58,18 +89,26 @@ export default function CartPage() {
 
   const orderTotal = cartItems.reduce(
     (acc, item) => acc + item.price * item.quantity,
-    0
+    0,
   );
 
   const deliveryFee = getDeliveryFee(form.state);
   const grandTotal = orderTotal + deliveryFee * 100;
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
   const validateForm = () => {
-    if (!form.email || !form.name || !form.phone || !form.address || !form.state) {
+    if (
+      !form.email ||
+      !form.name ||
+      !form.phone ||
+      !form.address ||
+      !form.state
+    ) {
       showToast("Please fill in all required fields", "error");
       return false;
     }
@@ -78,7 +117,9 @@ export default function CartPage() {
 
   // Records the order so it shows up in the admin dashboard/metrics and
   // returns its id, or null if that failed. Used by both payment paths.
-  const createOrder = async (paymentMethod: "bank_transfer" | "squad"): Promise<string | null> => {
+  const createOrder = async (
+    paymentMethod: "bank_transfer" | "squad",
+  ): Promise<string | null> => {
     if (!isSupabaseConfigured || !supabase) return null;
 
     try {
@@ -110,9 +151,10 @@ export default function CartPage() {
           variant_id: item.id,
           name: item.name,
           size: item.size,
+          color: item.color ?? null,
           price: item.price,
           quantity: item.quantity,
-        }))
+        })),
       );
       if (itemsErr) return null;
 
@@ -130,7 +172,13 @@ export default function CartPage() {
 
     localStorage.setItem(
       "pendingOrder",
-      JSON.stringify({ form, cartItems, subtotal: orderTotal, deliveryFee, total: grandTotal })
+      JSON.stringify({
+        form,
+        cartItems,
+        subtotal: orderTotal,
+        deliveryFee,
+        total: grandTotal,
+      }),
     );
 
     // Best-effort — a failure here shouldn't block checkout, since the
@@ -153,22 +201,36 @@ export default function CartPage() {
 
     localStorage.setItem(
       "pendingOrder",
-      JSON.stringify({ form, cartItems, subtotal: orderTotal, deliveryFee, total: grandTotal })
+      JSON.stringify({
+        form,
+        cartItems,
+        subtotal: orderTotal,
+        deliveryFee,
+        total: grandTotal,
+      }),
     );
 
     try {
       const res = await fetch("/api/squad/initiate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ orderId, email: form.email, amount: grandTotal, name: form.name }),
+        body: JSON.stringify({
+          orderId,
+          email: form.email,
+          amount: grandTotal,
+          name: form.name,
+        }),
       });
       const json = await res.json();
-      if (!res.ok || !json.checkout_url) throw new Error(json.error ?? "Could not start card payment");
+      if (!res.ok || !json.checkout_url)
+        throw new Error(json.error ?? "Could not start card payment");
       window.location.href = json.checkout_url;
     } catch (err) {
       showToast(
-        err instanceof Error ? err.message : "Card payment isn't available right now — try bank transfer",
-        "error"
+        err instanceof Error
+          ? err.message
+          : "Card payment isn't available right now — try bank transfer",
+        "error",
       );
       setPayingCard(false);
     }
@@ -182,7 +244,9 @@ export default function CartPage() {
         </div>
         <div className="text-center">
           <p className="text-zinc-900 font-medium mb-1">Your bag is empty</p>
-          <p className="text-zinc-400 text-xs tracking-wide">Add something to get started</p>
+          <p className="text-zinc-400 text-xs tracking-wide">
+            Add something to get started
+          </p>
         </div>
         <Link
           href="/shop"
@@ -196,12 +260,13 @@ export default function CartPage() {
 
   return (
     <div className="min-h-screen bg-white text-zinc-900">
-
       {/* NAV */}
       <nav className="sticky top-0 z-50 glass-nav">
         <div className="max-w-5xl mx-auto px-4 sm:px-8 py-4 flex items-center justify-between">
           <button
-            onClick={() => step === "delivery" ? setStep("bag") : window.history.back()}
+            onClick={() =>
+              step === "delivery" ? setStep("bag") : window.history.back()
+            }
             className="flex items-center gap-2 text-zinc-500 hover:text-zinc-900 transition-colors text-xs tracking-widest uppercase"
           >
             <ArrowLeft size={14} strokeWidth={1.5} />
@@ -236,10 +301,8 @@ export default function CartPage() {
 
       <div className="max-w-5xl mx-auto px-4 sm:px-8 py-8 pb-32 lg:pb-12">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
           {/* LEFT COLUMN */}
           <div className="lg:col-span-2 space-y-6">
-
             {/* STEP 1 — BAG */}
             {step === "bag" && (
               <div>
@@ -249,7 +312,7 @@ export default function CartPage() {
                 <div className="space-y-3">
                   {cartItems.map((item) => (
                     <div
-                      key={`${item.id}-${item.size}`}
+                      key={`${item.id}-${item.size}-${item.color ?? ""}`}
                       className="flex gap-4 p-4 glass rounded-2xl"
                     >
                       {/* THUMBNAIL */}
@@ -275,10 +338,15 @@ export default function CartPage() {
                             </h2>
                             <p className="text-zinc-500 text-xs mt-0.5">
                               Size {item.size}
+                              {item.color ? ` · Color ${item.color}` : ""}
                             </p>
                           </div>
                           <span className="text-sm font-semibold text-zinc-900 flex-shrink-0">
-                            ₦{((item.price * item.quantity) / 100).toLocaleString()}
+                            ₦
+                            {(
+                              (item.price * item.quantity) /
+                              100
+                            ).toLocaleString()}
                           </span>
                         </div>
 
@@ -288,8 +356,17 @@ export default function CartPage() {
                             <button
                               onClick={() =>
                                 item.quantity > 1
-                                  ? updateQuantity(item.id, item.size, item.quantity - 1)
-                                  : removeFromCart(item.id, item.size)
+                                  ? updateQuantity(
+                                      item.id,
+                                      item.size,
+                                      item.quantity - 1,
+                                      item.color,
+                                    )
+                                  : removeFromCart(
+                                      item.id,
+                                      item.size,
+                                      item.color,
+                                    )
                               }
                               className="w-9 h-9 flex items-center justify-center text-zinc-500 hover:text-zinc-900 hover:bg-zinc-900/5 transition-colors text-lg leading-none"
                             >
@@ -299,7 +376,14 @@ export default function CartPage() {
                               {item.quantity}
                             </span>
                             <button
-                              onClick={() => updateQuantity(item.id, item.size, item.quantity + 1)}
+                              onClick={() =>
+                                updateQuantity(
+                                  item.id,
+                                  item.size,
+                                  item.quantity + 1,
+                                  item.color,
+                                )
+                              }
                               className="w-9 h-9 flex items-center justify-center text-zinc-500 hover:text-zinc-900 hover:bg-zinc-900/5 transition-colors text-lg leading-none"
                             >
                               +
@@ -308,7 +392,7 @@ export default function CartPage() {
 
                           <button
                             onClick={() => {
-                              removeFromCart(item.id, item.size);
+                              removeFromCart(item.id, item.size, item.color);
                               showToast(`Removed ${item.name}`, "info");
                             }}
                             className="text-[10px] tracking-widest uppercase text-zinc-400 hover:text-red-500 transition-colors"
@@ -339,7 +423,6 @@ export default function CartPage() {
                   Delivery Details
                 </p>
                 <div className="space-y-3">
-
                   <input
                     type="text"
                     name="name"
@@ -414,24 +497,32 @@ export default function CartPage() {
                         </optgroup>
                         <optgroup label="Standard ₦11,500">
                           {NIGERIAN_STATES.map((s) => (
-                            <option key={s} value={s}>{s}</option>
+                            <option key={s} value={s}>
+                              {s}
+                            </option>
                           ))}
                         </optgroup>
                       </select>
-                      <ChevronDown size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
+                      <ChevronDown
+                        size={14}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none"
+                      />
                     </div>
                   </div>
 
                   {/* DELIVERY INFO TAG */}
                   {form.state && (
                     <div className="flex items-center gap-3 px-4 py-3 glass rounded-xl">
-                      <Truck size={14} strokeWidth={1.5} className="text-zinc-500 flex-shrink-0" />
+                      <Truck
+                        size={14}
+                        strokeWidth={1.5}
+                        className="text-zinc-500 flex-shrink-0"
+                      />
                       <p className="text-xs text-zinc-600">
                         {getDeliveryLabel(form.state)}
                       </p>
                     </div>
                   )}
-
                 </div>
               </div>
             )}
@@ -447,7 +538,10 @@ export default function CartPage() {
               {/* ITEMS */}
               <div className="space-y-2.5">
                 {cartItems.map((item) => (
-                  <div key={`${item.id}-${item.size}`} className="flex justify-between text-xs">
+                  <div
+                    key={`${item.id}-${item.size}`}
+                    className="flex justify-between text-xs"
+                  >
                     <span className="text-zinc-500 truncate pr-2">
                       {item.name} ({item.size}) ×{item.quantity}
                     </span>
@@ -466,7 +560,9 @@ export default function CartPage() {
                 <div className="flex justify-between text-xs text-zinc-500">
                   <span>Delivery</span>
                   {form.state ? (
-                    <span className="text-zinc-900">₦{deliveryFee.toLocaleString()}</span>
+                    <span className="text-zinc-900">
+                      ₦{deliveryFee.toLocaleString()}
+                    </span>
                   ) : (
                     <span className="text-zinc-400 italic">Select state</span>
                   )}
@@ -487,7 +583,9 @@ export default function CartPage() {
                     : "bg-zinc-900 text-white hover:bg-zinc-700 shadow-lg shadow-zinc-900/10"
                 }`}
               >
-                {payingCard ? "Redirecting to secure checkout..." : "Pay Now — Card / Bank / USSD"}
+                {payingCard
+                  ? "Redirecting to secure checkout..."
+                  : "Pay Now — Card / Bank / USSD"}
               </button>
 
               <button
@@ -495,12 +593,17 @@ export default function CartPage() {
                 disabled={payingCard || payingTransfer}
                 className="w-full py-3 text-[10px] tracking-[0.2em] uppercase text-zinc-500 hover:text-zinc-900 transition-colors disabled:opacity-50"
               >
-                {payingTransfer ? "Redirecting..." : "Prefer bank transfer? Pay manually instead"}
+                {payingTransfer
+                  ? "Redirecting..."
+                  : "Prefer bank transfer? Pay manually instead"}
               </button>
 
               <p className="text-zinc-400 text-[10px] tracking-wide text-center">
                 Fill all required fields before paying — see our{" "}
-                <a className="text-zinc-600 underline hover:text-zinc-900 transition-colors" href="/shipping_policy">
+                <a
+                  className="text-zinc-600 underline hover:text-zinc-900 transition-colors"
+                  href="/shipping_policy"
+                >
                   shipping policy
                 </a>
               </p>
@@ -513,14 +616,15 @@ export default function CartPage() {
               </Link>
             </div>
           </div>
-
         </div>
       </div>
 
       {/* MOBILE FIXED BOTTOM CTA */}
       <div className="fixed bottom-0 left-0 right-0 p-4 glass-nav lg:hidden">
         <div className="flex items-center justify-between mb-3">
-          <span className="text-xs text-zinc-500 uppercase tracking-widest">Total</span>
+          <span className="text-xs text-zinc-500 uppercase tracking-widest">
+            Total
+          </span>
           <span className="text-sm font-semibold text-zinc-900">
             ₦{(grandTotal / 100).toLocaleString()}
           </span>
@@ -537,8 +641,8 @@ export default function CartPage() {
           {step === "bag"
             ? "Continue to Delivery"
             : payingCard
-            ? "Redirecting..."
-            : "Pay Now"}
+              ? "Redirecting..."
+              : "Pay Now"}
         </button>
         {step === "delivery" && (
           <button
@@ -550,7 +654,6 @@ export default function CartPage() {
           </button>
         )}
       </div>
-
     </div>
   );
 }

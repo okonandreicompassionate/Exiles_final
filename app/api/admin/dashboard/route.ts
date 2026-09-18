@@ -15,7 +15,10 @@ const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 export async function GET(req: NextRequest) {
   const requester = await getRequestingAdmin(req);
   if ("error" in requester) {
-    return NextResponse.json({ error: requester.error }, { status: requester.status });
+    return NextResponse.json(
+      { error: requester.error },
+      { status: requester.status },
+    );
   }
   const { role } = requester.admin;
   const db = supabaseAdmin!;
@@ -30,14 +33,20 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: stockErr.message }, { status: 400 });
   }
 
-  const { data: categories } = await db.from("categories").select("id, name").order("name");
+  const { data: categories } = await db
+    .from("categories")
+    .select("id, name")
+    .order("name");
 
   const { data: variantRows } = await db
     .from("variants")
     .select("product_id, size, stock")
     .order("size", { ascending: true });
 
-  const variantsByProduct = new Map<string, { size: string; stock: number }[]>();
+  const variantsByProduct = new Map<
+    string,
+    { size: string; stock: number }[]
+  >();
   (variantRows ?? []).forEach((v) => {
     const list = variantsByProduct.get(v.product_id) ?? [];
     list.push({ size: v.size, stock: v.stock });
@@ -79,7 +88,7 @@ export async function GET(req: NextRequest) {
   const { data: orderRows, error: ordersErr } = await db
     .from("orders")
     .select(
-      "id, customer_name, customer_phone, state, status, total, created_at, order_items(name, size, quantity, price)"
+      "id, customer_name, customer_phone, state, status, total, created_at, order_items(name, size, color, quantity, price)",
     )
     .order("created_at", { ascending: false })
     .limit(100);
@@ -95,7 +104,23 @@ export async function GET(req: NextRequest) {
     state: o.state as string,
     status: o.status as string,
     createdAt: o.created_at as string,
-    itemCount: ((o.order_items as { quantity: number }[]) ?? []).reduce((sum, i) => sum + i.quantity, 0),
+    items: (
+      (o.order_items as {
+        name: string;
+        size: string | null;
+        color: string | null;
+        quantity: number;
+      }[]) ?? []
+    ).map((item) => ({
+      name: item.name,
+      size: item.size,
+      color: item.color,
+      quantity: item.quantity,
+    })),
+    itemCount: ((o.order_items as { quantity: number }[]) ?? []).reduce(
+      (sum, i) => sum + i.quantity,
+      0,
+    ),
     total: o.total as number,
   }));
 
@@ -122,35 +147,59 @@ export async function GET(req: NextRequest) {
   };
 
   // ── REVENUE — every admin sees the basics now ──
-  const { data: dailyRows } = await db.from("daily_revenue").select("*").limit(14);
+  const { data: dailyRows } = await db
+    .from("daily_revenue")
+    .select("*")
+    .limit(14);
 
   const { data: paidOrders } = await db
     .from("orders")
     .select("total, state, created_at")
     .in("status", ["paid", "fulfilled"]);
 
-  const totalRevenue = (paidOrders ?? []).reduce((sum, o) => sum + (o.total as number), 0);
+  const totalRevenue = (paidOrders ?? []).reduce(
+    (sum, o) => sum + (o.total as number),
+    0,
+  );
   const paidOrderCount = paidOrders?.length ?? 0;
-  const averageOrderValue = paidOrderCount > 0 ? Math.round(totalRevenue / paidOrderCount) : 0;
+  const averageOrderValue =
+    paidOrderCount > 0 ? Math.round(totalRevenue / paidOrderCount) : 0;
 
   const { data: itemRows } = await db
     .from("order_items")
     .select("name, price, quantity, product_id, orders!inner(status)")
     .in("orders.status", ["paid", "fulfilled"]);
 
-  const topMap = new Map<string, { name: string; revenue: number; quantity: number }>();
+  const topMap = new Map<
+    string,
+    { name: string; revenue: number; quantity: number }
+  >();
   const categoryRevenueMap = new Map<string, number>();
   (itemRows ?? []).forEach((i) => {
-    const row = i as unknown as { name: string; price: number; quantity: number; product_id: string | null };
+    const row = i as unknown as {
+      name: string;
+      price: number;
+      quantity: number;
+      product_id: string | null;
+    };
     const lineRevenue = row.price * row.quantity;
 
-    const entry = topMap.get(row.name) ?? { name: row.name, revenue: 0, quantity: 0 };
+    const entry = topMap.get(row.name) ?? {
+      name: row.name,
+      revenue: 0,
+      quantity: 0,
+    };
     entry.revenue += lineRevenue;
     entry.quantity += row.quantity;
     topMap.set(row.name, entry);
 
-    const catName = (row.product_id && productCategoryName.get(row.product_id)) || "Uncategorized";
-    categoryRevenueMap.set(catName, (categoryRevenueMap.get(catName) ?? 0) + lineRevenue);
+    const catName =
+      (row.product_id && productCategoryName.get(row.product_id)) ||
+      "Uncategorized";
+    categoryRevenueMap.set(
+      catName,
+      (categoryRevenueMap.get(catName) ?? 0) + lineRevenue,
+    );
   });
 
   const topProducts = Array.from(topMap.values())
@@ -200,11 +249,24 @@ export async function GET(req: NextRequest) {
       paid: byStatus.paid,
       fulfilled: byStatus.fulfilled,
       cancelled: byStatus.cancelled,
-      fulfillmentRate: totalOrders > 0 ? Math.round(((byStatus.paid + byStatus.fulfilled) / totalOrders) * 100) : 0,
-      cancellationRate: totalOrders > 0 ? Math.round((byStatus.cancelled / totalOrders) * 100) : 0,
+      fulfillmentRate:
+        totalOrders > 0
+          ? Math.round(
+              ((byStatus.paid + byStatus.fulfilled) / totalOrders) * 100,
+            )
+          : 0,
+      cancellationRate:
+        totalOrders > 0
+          ? Math.round((byStatus.cancelled / totalOrders) * 100)
+          : 0,
     };
 
-    payload.analytics = { revenueByCategory, ordersByState, ordersByWeekday, funnel };
+    payload.analytics = {
+      revenueByCategory,
+      ordersByState,
+      ordersByWeekday,
+      funnel,
+    };
   }
 
   return NextResponse.json(payload);

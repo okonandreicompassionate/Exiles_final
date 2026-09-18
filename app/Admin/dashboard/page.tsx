@@ -51,6 +51,12 @@ type OrderRow = {
   status: "pending" | "paid" | "fulfilled" | "cancelled";
   createdAt: string;
   itemCount: number;
+  items: {
+    name: string;
+    size: string | null;
+    color: string | null;
+    quantity: number;
+  }[];
   total: number;
 };
 type DashboardData = {
@@ -119,7 +125,8 @@ export default function AdminDashboardPage() {
   const [loadingData, setLoadingData] = useState(false);
 
   const [categoryFilter, setCategoryFilter] = useState<string>("ALL");
-  const [stockStatusFilter, setStockStatusFilter] = useState<(typeof STOCK_FILTERS)[number]["key"]>("all");
+  const [stockStatusFilter, setStockStatusFilter] =
+    useState<(typeof STOCK_FILTERS)[number]["key"]>("all");
   const [search, setSearch] = useState("");
   const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
 
@@ -133,12 +140,17 @@ export default function AdminDashboardPage() {
   async function loadDashboard() {
     setLoadingData(true);
     try {
-      const res = await fetch("/api/admin/dashboard", { headers: await authHeader() });
+      const res = await fetch("/api/admin/dashboard", {
+        headers: await authHeader(),
+      });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? "Failed to load dashboard");
       setData(json);
     } catch (err) {
-      showToast(err instanceof Error ? err.message : "Failed to load dashboard", "error");
+      showToast(
+        err instanceof Error ? err.message : "Failed to load dashboard",
+        "error",
+      );
     }
     setLoadingData(false);
   }
@@ -168,7 +180,10 @@ export default function AdminDashboardPage() {
 
   async function handleLogin() {
     if (!supabase) {
-      showToast("Supabase is not configured. Add your environment variables first.", "error");
+      showToast(
+        "Supabase is not configured. Add your environment variables first.",
+        "error",
+      );
       return;
     }
     if (!loginEmail || !loginPassword) {
@@ -214,7 +229,10 @@ export default function AdminDashboardPage() {
     try {
       const res = await fetch("/api/admin/orders/status", {
         method: "POST",
-        headers: { "Content-Type": "application/json", ...(await authHeader()) },
+        headers: {
+          "Content-Type": "application/json",
+          ...(await authHeader()),
+        },
         body: JSON.stringify({ id, status }),
       });
       const json = await res.json();
@@ -222,7 +240,10 @@ export default function AdminDashboardPage() {
       showToast(`Order marked ${status}`, "success");
       await loadDashboard();
     } catch (err) {
-      showToast(err instanceof Error ? err.message : "Failed to update order", "error");
+      showToast(
+        err instanceof Error ? err.message : "Failed to update order",
+        "error",
+      );
     }
     setUpdatingOrderId(null);
   }
@@ -230,11 +251,20 @@ export default function AdminDashboardPage() {
   const filteredProducts = useMemo(() => {
     if (!data) return [];
     return data.stock.products.filter((p) => {
-      if (categoryFilter !== "ALL" && p.categoryId !== categoryFilter) return false;
+      if (categoryFilter !== "ALL" && p.categoryId !== categoryFilter)
+        return false;
       if (stockStatusFilter === "out" && p.totalStock !== 0) return false;
-      if (stockStatusFilter === "low" && !(p.totalStock > 0 && p.lowStockVariants > 0)) return false;
+      if (
+        stockStatusFilter === "low" &&
+        !(p.totalStock > 0 && p.lowStockVariants > 0)
+      )
+        return false;
       if (stockStatusFilter === "in" && p.totalStock === 0) return false;
-      if (search.trim() && !p.name.toLowerCase().includes(search.trim().toLowerCase())) return false;
+      if (
+        search.trim() &&
+        !p.name.toLowerCase().includes(search.trim().toLowerCase())
+      )
+        return false;
       return true;
     });
   }, [data, categoryFilter, stockStatusFilter, search]);
@@ -254,8 +284,12 @@ export default function AdminDashboardPage() {
           <div className="text-center flex flex-col items-center gap-3">
             <Logo showText={false} markClassName="h-10" />
             <div>
-              <h1 className="font-bold tracking-[0.4em] text-sm uppercase mb-1">EX1LES</h1>
-              <p className="text-zinc-400 text-xs tracking-widest uppercase">Admin Access</p>
+              <h1 className="font-bold tracking-[0.4em] text-sm uppercase mb-1">
+                EX1LES
+              </h1>
+              <p className="text-zinc-400 text-xs tracking-widest uppercase">
+                Admin Access
+              </p>
             </div>
           </div>
           <div className="space-y-3">
@@ -290,8 +324,16 @@ export default function AdminDashboardPage() {
     );
   }
 
-  const byStatus = data?.orders.byStatus ?? { pending: 0, paid: 0, fulfilled: 0, cancelled: 0 };
-  const maxDailyRevenue = Math.max(1, ...(data?.revenue?.last14Days.map((d) => d.revenue) ?? [1]));
+  const byStatus = data?.orders.byStatus ?? {
+    pending: 0,
+    paid: 0,
+    fulfilled: 0,
+    cancelled: 0,
+  };
+  const maxDailyRevenue = Math.max(
+    1,
+    ...(data?.revenue?.last14Days.map((d) => d.revenue) ?? [1]),
+  );
 
   return (
     <div className="min-h-screen bg-white text-zinc-900">
@@ -301,18 +343,30 @@ export default function AdminDashboardPage() {
       {data && (
         <div className="sticky top-[calc(4rem+1px)] z-40 glass-nav border-t border-zinc-900/5">
           <div className="max-w-6xl mx-auto px-4 sm:px-8 py-2.5 flex items-center gap-5 overflow-x-auto">
-            <a href="#overview" className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-zinc-500 hover:text-zinc-900 transition-colors whitespace-nowrap">
+            <a
+              href="#overview"
+              className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-zinc-500 hover:text-zinc-900 transition-colors whitespace-nowrap"
+            >
               <LayoutGrid size={12} /> Overview
             </a>
             {data.analytics && (
-              <a href="#analytics" className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-zinc-500 hover:text-zinc-900 transition-colors whitespace-nowrap">
+              <a
+                href="#analytics"
+                className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-zinc-500 hover:text-zinc-900 transition-colors whitespace-nowrap"
+              >
                 <LineChart size={12} /> Analytics
               </a>
             )}
-            <a href="#stock" className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-zinc-500 hover:text-zinc-900 transition-colors whitespace-nowrap">
+            <a
+              href="#stock"
+              className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-zinc-500 hover:text-zinc-900 transition-colors whitespace-nowrap"
+            >
               <Boxes size={12} /> Stock
             </a>
-            <a href="#orders" className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-zinc-500 hover:text-zinc-900 transition-colors whitespace-nowrap">
+            <a
+              href="#orders"
+              className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-zinc-500 hover:text-zinc-900 transition-colors whitespace-nowrap"
+            >
               <ShoppingBag size={12} /> Orders
             </a>
           </div>
@@ -329,11 +383,33 @@ export default function AdminDashboardPage() {
         {data && (
           <>
             {/* ── KPI CARDS ── */}
-            <div id="overview" className="grid grid-cols-2 lg:grid-cols-4 gap-4 scroll-mt-28">
-              <KpiCard icon={ShoppingBag} label="Orders" value={String(data.orders.total)} />
-              <KpiCard icon={Clock} label="Pending" value={String(byStatus.pending ?? 0)} accent="text-amber-600" />
-              <KpiCard icon={PackageCheck} label="Fulfilled" value={String(byStatus.fulfilled ?? 0)} accent="text-emerald-600" />
-              <KpiCard icon={XCircle} label="Cancelled" value={String(byStatus.cancelled ?? 0)} accent="text-red-500" />
+            <div
+              id="overview"
+              className="grid grid-cols-2 lg:grid-cols-4 gap-4 scroll-mt-28"
+            >
+              <KpiCard
+                icon={ShoppingBag}
+                label="Orders"
+                value={String(data.orders.total)}
+              />
+              <KpiCard
+                icon={Clock}
+                label="Pending"
+                value={String(byStatus.pending ?? 0)}
+                accent="text-amber-600"
+              />
+              <KpiCard
+                icon={PackageCheck}
+                label="Fulfilled"
+                value={String(byStatus.fulfilled ?? 0)}
+                accent="text-emerald-600"
+              />
+              <KpiCard
+                icon={XCircle}
+                label="Cancelled"
+                value={String(byStatus.cancelled ?? 0)}
+                accent="text-red-500"
+              />
 
               {data.revenue && (
                 <>
@@ -350,7 +426,12 @@ export default function AdminDashboardPage() {
                     value={naira(data.revenue.averageOrderValue)}
                     accent="text-amber-700"
                   />
-                  <KpiCard icon={CheckCircle2} label="Paid Orders" value={String(data.revenue.paidOrderCount)} accent="text-sky-600" />
+                  <KpiCard
+                    icon={CheckCircle2}
+                    label="Paid Orders"
+                    value={String(data.revenue.paidOrderCount)}
+                    accent="text-sky-600"
+                  />
                 </>
               )}
             </div>
@@ -363,19 +444,29 @@ export default function AdminDashboardPage() {
                     Revenue — Last 14 Days
                   </p>
                   {data.revenue.last14Days.length === 0 ? (
-                    <p className="text-xs text-zinc-400 py-10 text-center">No paid orders yet.</p>
+                    <p className="text-xs text-zinc-400 py-10 text-center">
+                      No paid orders yet.
+                    </p>
                   ) : (
                     <div className="flex items-end gap-1.5 h-40">
                       {data.revenue.last14Days.map((d) => (
-                        <div key={d.day} className="flex-1 flex flex-col items-center gap-1.5 group relative">
+                        <div
+                          key={d.day}
+                          className="flex-1 flex flex-col items-center gap-1.5 group relative"
+                        >
                           <div className="w-full flex items-end h-32">
                             <div
                               className="w-full bg-zinc-900 rounded-t-md group-hover:bg-amber-600 transition-colors"
-                              style={{ height: `${Math.max(4, (d.revenue / maxDailyRevenue) * 100)}%` }}
+                              style={{
+                                height: `${Math.max(4, (d.revenue / maxDailyRevenue) * 100)}%`,
+                              }}
                             />
                           </div>
                           <span className="text-[8px] text-zinc-400 tabular-nums">
-                            {new Date(d.day).toLocaleDateString(undefined, { day: "numeric", month: "short" })}
+                            {new Date(d.day).toLocaleDateString(undefined, {
+                              day: "numeric",
+                              month: "short",
+                            })}
                           </span>
                           <div className="pointer-events-none absolute -top-8 opacity-0 group-hover:opacity-100 transition-opacity glass-strong text-[10px] px-2 py-1 rounded-lg whitespace-nowrap">
                             {naira(d.revenue)}
@@ -400,10 +491,16 @@ export default function AdminDashboardPage() {
                             {i + 1}
                           </span>
                           <div className="min-w-0 flex-1">
-                            <p className="text-xs text-zinc-800 truncate">{p.name}</p>
-                            <p className="text-[10px] text-zinc-400">{p.quantity} sold</p>
+                            <p className="text-xs text-zinc-800 truncate">
+                              {p.name}
+                            </p>
+                            <p className="text-[10px] text-zinc-400">
+                              {p.quantity} sold
+                            </p>
                           </div>
-                          <span className="text-xs font-semibold text-zinc-900 flex-shrink-0">{naira(p.revenue)}</span>
+                          <span className="text-xs font-semibold text-zinc-900 flex-shrink-0">
+                            {naira(p.revenue)}
+                          </span>
                         </div>
                       ))}
                     </div>
@@ -417,20 +514,40 @@ export default function AdminDashboardPage() {
               <div id="analytics" className="scroll-mt-28">
                 <div className="flex items-center gap-2 mb-4">
                   <LineChart size={14} className="text-amber-700" />
-                  <p className="text-[10px] tracking-[0.4em] uppercase text-amber-700 font-medium">Analytics</p>
+                  <p className="text-[10px] tracking-[0.4em] uppercase text-amber-700 font-medium">
+                    Analytics
+                  </p>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                   {/* FUNNEL */}
                   <div className="glass rounded-2xl p-5">
-                    <p className="text-[10px] tracking-[0.3em] uppercase text-zinc-400 mb-4">Order Funnel</p>
+                    <p className="text-[10px] tracking-[0.3em] uppercase text-zinc-400 mb-4">
+                      Order Funnel
+                    </p>
                     <div className="space-y-3">
                       {(
                         [
-                          { label: "Pending", value: data.analytics.funnel.pending, color: "bg-amber-500" },
-                          { label: "Paid", value: data.analytics.funnel.paid, color: "bg-sky-500" },
-                          { label: "Fulfilled", value: data.analytics.funnel.fulfilled, color: "bg-emerald-500" },
-                          { label: "Cancelled", value: data.analytics.funnel.cancelled, color: "bg-red-400" },
+                          {
+                            label: "Pending",
+                            value: data.analytics.funnel.pending,
+                            color: "bg-amber-500",
+                          },
+                          {
+                            label: "Paid",
+                            value: data.analytics.funnel.paid,
+                            color: "bg-sky-500",
+                          },
+                          {
+                            label: "Fulfilled",
+                            value: data.analytics.funnel.fulfilled,
+                            color: "bg-emerald-500",
+                          },
+                          {
+                            label: "Cancelled",
+                            value: data.analytics.funnel.cancelled,
+                            color: "bg-red-400",
+                          },
                         ] as const
                       ).map((row) => {
                         const max = Math.max(
@@ -438,17 +555,22 @@ export default function AdminDashboardPage() {
                           data.analytics!.funnel.pending,
                           data.analytics!.funnel.paid,
                           data.analytics!.funnel.fulfilled,
-                          data.analytics!.funnel.cancelled
+                          data.analytics!.funnel.cancelled,
                         );
                         return (
-                          <div key={row.label} className="flex items-center gap-3">
+                          <div
+                            key={row.label}
+                            className="flex items-center gap-3"
+                          >
                             <span className="w-16 text-[10px] uppercase tracking-widest text-zinc-500 flex-shrink-0">
                               {row.label}
                             </span>
                             <div className="flex-1 h-2.5 rounded-full bg-zinc-900/5 overflow-hidden">
                               <div
                                 className={`h-full rounded-full ${row.color}`}
-                                style={{ width: `${Math.max(3, (row.value / max) * 100)}%` }}
+                                style={{
+                                  width: `${Math.max(3, (row.value / max) * 100)}%`,
+                                }}
                               />
                             </div>
                             <span className="w-8 text-right text-xs text-zinc-700 tabular-nums flex-shrink-0">
@@ -459,26 +581,50 @@ export default function AdminDashboardPage() {
                       })}
                     </div>
                     <div className="flex gap-4 mt-4 pt-4 border-t border-zinc-900/10 text-[10px] text-zinc-500">
-                      <span><span className="text-zinc-900 font-semibold">{data.analytics.funnel.fulfillmentRate}%</span> paid or fulfilled</span>
-                      <span><span className="text-zinc-900 font-semibold">{data.analytics.funnel.cancellationRate}%</span> cancelled</span>
+                      <span>
+                        <span className="text-zinc-900 font-semibold">
+                          {data.analytics.funnel.fulfillmentRate}%
+                        </span>{" "}
+                        paid or fulfilled
+                      </span>
+                      <span>
+                        <span className="text-zinc-900 font-semibold">
+                          {data.analytics.funnel.cancellationRate}%
+                        </span>{" "}
+                        cancelled
+                      </span>
                     </div>
                   </div>
 
                   {/* ORDERS BY WEEKDAY */}
                   <div className="glass rounded-2xl p-5">
-                    <p className="text-[10px] tracking-[0.3em] uppercase text-zinc-400 mb-4">Busiest Days</p>
+                    <p className="text-[10px] tracking-[0.3em] uppercase text-zinc-400 mb-4">
+                      Busiest Days
+                    </p>
                     <div className="flex items-end gap-2 h-28">
                       {data.analytics.ordersByWeekday.map((d) => {
-                        const max = Math.max(1, ...data.analytics!.ordersByWeekday.map((x) => x.orders));
+                        const max = Math.max(
+                          1,
+                          ...data.analytics!.ordersByWeekday.map(
+                            (x) => x.orders,
+                          ),
+                        );
                         return (
-                          <div key={d.label} className="flex-1 flex flex-col items-center gap-1.5 group relative">
+                          <div
+                            key={d.label}
+                            className="flex-1 flex flex-col items-center gap-1.5 group relative"
+                          >
                             <div className="w-full flex items-end h-20">
                               <div
                                 className="w-full bg-zinc-900 rounded-t-md group-hover:bg-amber-600 transition-colors"
-                                style={{ height: `${Math.max(4, (d.orders / max) * 100)}%` }}
+                                style={{
+                                  height: `${Math.max(4, (d.orders / max) * 100)}%`,
+                                }}
                               />
                             </div>
-                            <span className="text-[9px] text-zinc-400">{d.label}</span>
+                            <span className="text-[9px] text-zinc-400">
+                              {d.label}
+                            </span>
                             <div className="pointer-events-none absolute -top-8 opacity-0 group-hover:opacity-100 transition-opacity glass-strong text-[10px] px-2 py-1 rounded-lg whitespace-nowrap">
                               {d.orders} orders · {naira(d.revenue)}
                             </div>
@@ -492,20 +638,41 @@ export default function AdminDashboardPage() {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {/* REVENUE BY CATEGORY */}
                   <div className="glass rounded-2xl p-5">
-                    <p className="text-[10px] tracking-[0.3em] uppercase text-zinc-400 mb-4">Revenue by Category</p>
+                    <p className="text-[10px] tracking-[0.3em] uppercase text-zinc-400 mb-4">
+                      Revenue by Category
+                    </p>
                     {data.analytics.revenueByCategory.length === 0 ? (
-                      <p className="text-xs text-zinc-400">No paid orders yet.</p>
+                      <p className="text-xs text-zinc-400">
+                        No paid orders yet.
+                      </p>
                     ) : (
                       <div className="space-y-2.5">
                         {data.analytics.revenueByCategory.map((c) => {
-                          const max = Math.max(1, ...data.analytics!.revenueByCategory.map((x) => x.revenue));
+                          const max = Math.max(
+                            1,
+                            ...data.analytics!.revenueByCategory.map(
+                              (x) => x.revenue,
+                            ),
+                          );
                           return (
-                            <div key={c.categoryName} className="flex items-center gap-3">
-                              <span className="w-20 text-xs text-zinc-600 truncate flex-shrink-0">{c.categoryName}</span>
+                            <div
+                              key={c.categoryName}
+                              className="flex items-center gap-3"
+                            >
+                              <span className="w-20 text-xs text-zinc-600 truncate flex-shrink-0">
+                                {c.categoryName}
+                              </span>
                               <div className="flex-1 h-2 rounded-full bg-zinc-900/5 overflow-hidden">
-                                <div className="h-full rounded-full bg-amber-600" style={{ width: `${Math.max(3, (c.revenue / max) * 100)}%` }} />
+                                <div
+                                  className="h-full rounded-full bg-amber-600"
+                                  style={{
+                                    width: `${Math.max(3, (c.revenue / max) * 100)}%`,
+                                  }}
+                                />
                               </div>
-                              <span className="text-xs text-zinc-900 font-medium flex-shrink-0">{naira(c.revenue)}</span>
+                              <span className="text-xs text-zinc-900 font-medium flex-shrink-0">
+                                {naira(c.revenue)}
+                              </span>
                             </div>
                           );
                         })}
@@ -517,21 +684,42 @@ export default function AdminDashboardPage() {
                   <div className="glass rounded-2xl p-5">
                     <div className="flex items-center gap-1.5 mb-4">
                       <MapPin size={12} className="text-zinc-400" />
-                      <p className="text-[10px] tracking-[0.3em] uppercase text-zinc-400">Top Delivery States</p>
+                      <p className="text-[10px] tracking-[0.3em] uppercase text-zinc-400">
+                        Top Delivery States
+                      </p>
                     </div>
                     {data.analytics.ordersByState.length === 0 ? (
-                      <p className="text-xs text-zinc-400">No paid orders yet.</p>
+                      <p className="text-xs text-zinc-400">
+                        No paid orders yet.
+                      </p>
                     ) : (
                       <div className="space-y-2.5">
                         {data.analytics.ordersByState.map((s) => {
-                          const max = Math.max(1, ...data.analytics!.ordersByState.map((x) => x.count));
+                          const max = Math.max(
+                            1,
+                            ...data.analytics!.ordersByState.map(
+                              (x) => x.count,
+                            ),
+                          );
                           return (
-                            <div key={s.state} className="flex items-center gap-3">
-                              <span className="w-20 text-xs text-zinc-600 truncate flex-shrink-0">{s.state}</span>
+                            <div
+                              key={s.state}
+                              className="flex items-center gap-3"
+                            >
+                              <span className="w-20 text-xs text-zinc-600 truncate flex-shrink-0">
+                                {s.state}
+                              </span>
                               <div className="flex-1 h-2 rounded-full bg-zinc-900/5 overflow-hidden">
-                                <div className="h-full rounded-full bg-sky-600" style={{ width: `${Math.max(3, (s.count / max) * 100)}%` }} />
+                                <div
+                                  className="h-full rounded-full bg-sky-600"
+                                  style={{
+                                    width: `${Math.max(3, (s.count / max) * 100)}%`,
+                                  }}
+                                />
                               </div>
-                              <span className="text-xs text-zinc-900 font-medium flex-shrink-0">{s.count}</span>
+                              <span className="text-xs text-zinc-900 font-medium flex-shrink-0">
+                                {s.count}
+                              </span>
                             </div>
                           );
                         })}
@@ -546,7 +734,9 @@ export default function AdminDashboardPage() {
             <div id="stock" className="scroll-mt-28">
               <div className="flex items-center gap-2 mb-4">
                 <Boxes size={14} className="text-amber-700" />
-                <p className="text-[10px] tracking-[0.4em] uppercase text-amber-700 font-medium">Stock Tracker</p>
+                <p className="text-[10px] tracking-[0.4em] uppercase text-amber-700 font-medium">
+                  Stock Tracker
+                </p>
               </div>
 
               {/* Category chips */}
@@ -554,7 +744,9 @@ export default function AdminDashboardPage() {
                 <button
                   onClick={() => setCategoryFilter("ALL")}
                   className={`px-3.5 py-2 rounded-xl text-[10px] uppercase tracking-widest transition-colors ${
-                    categoryFilter === "ALL" ? "bg-zinc-900 text-white" : "glass text-zinc-500 hover:text-zinc-900"
+                    categoryFilter === "ALL"
+                      ? "bg-zinc-900 text-white"
+                      : "glass text-zinc-500 hover:text-zinc-900"
                   }`}
                 >
                   All Categories
@@ -572,7 +764,10 @@ export default function AdminDashboardPage() {
                     {c.categoryName}
                     <span className="opacity-60">· {c.totalStock}</span>
                     {c.outOfStock > 0 && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-red-500" title={`${c.outOfStock} size(s) out of stock`} />
+                      <span
+                        className="w-1.5 h-1.5 rounded-full bg-red-500"
+                        title={`${c.outOfStock} size(s) out of stock`}
+                      />
                     )}
                   </button>
                 ))}
@@ -581,7 +776,10 @@ export default function AdminDashboardPage() {
               {/* Search + status filter */}
               <div className="flex flex-col sm:flex-row gap-2 mb-4">
                 <div className="relative flex-1">
-                  <Search size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400" />
+                  <Search
+                    size={14}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400"
+                  />
                   <input
                     type="text"
                     placeholder="Search products..."
@@ -596,7 +794,9 @@ export default function AdminDashboardPage() {
                       key={f.key}
                       onClick={() => setStockStatusFilter(f.key)}
                       className={`px-3 py-2 rounded-lg text-[10px] uppercase tracking-widest transition-colors ${
-                        stockStatusFilter === f.key ? "bg-zinc-900 text-white" : "text-zinc-500 hover:text-zinc-900"
+                        stockStatusFilter === f.key
+                          ? "bg-zinc-900 text-white"
+                          : "text-zinc-500 hover:text-zinc-900"
                       }`}
                     >
                       {f.label}
@@ -611,27 +811,46 @@ export default function AdminDashboardPage() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-zinc-900/10 text-[10px] uppercase tracking-widest text-zinc-400">
-                        <th className="text-left py-3 px-4 font-medium">Product</th>
-                        <th className="text-left py-3 px-4 font-medium hidden sm:table-cell">Category</th>
-                        <th className="text-left py-3 px-4 font-medium">Sizes</th>
-                        <th className="text-right py-3 px-4 font-medium">Total</th>
+                        <th className="text-left py-3 px-4 font-medium">
+                          Product
+                        </th>
+                        <th className="text-left py-3 px-4 font-medium hidden sm:table-cell">
+                          Category
+                        </th>
+                        <th className="text-left py-3 px-4 font-medium">
+                          Sizes
+                        </th>
+                        <th className="text-right py-3 px-4 font-medium">
+                          Total
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
                       {filteredProducts.map((p) => (
-                        <tr key={p.id} className="border-b border-zinc-900/5 last:border-0 hover:bg-zinc-900/[0.02]">
+                        <tr
+                          key={p.id}
+                          className="border-b border-zinc-900/5 last:border-0 hover:bg-zinc-900/[0.02]"
+                        >
                           <td className="py-3 px-4">
                             <div className="flex items-center gap-3 min-w-0">
                               <div className="w-9 h-9 rounded-lg overflow-hidden bg-zinc-100 flex-shrink-0">
                                 {p.imageUrl && (
                                   // eslint-disable-next-line @next/next/no-img-element
-                                  <img src={p.imageUrl} alt="" className="w-full h-full object-cover" />
+                                  <img
+                                    src={p.imageUrl}
+                                    alt=""
+                                    className="w-full h-full object-cover"
+                                  />
                                 )}
                               </div>
-                              <span className="truncate text-zinc-800">{p.name}</span>
+                              <span className="truncate text-zinc-800">
+                                {p.name}
+                              </span>
                             </div>
                           </td>
-                          <td className="py-3 px-4 text-zinc-500 hidden sm:table-cell">{p.categoryName}</td>
+                          <td className="py-3 px-4 text-zinc-500 hidden sm:table-cell">
+                            {p.categoryName}
+                          </td>
                           <td className="py-3 px-4">
                             <div className="flex gap-1 flex-wrap">
                               {p.variants.map((v) => (
@@ -641,8 +860,8 @@ export default function AdminDashboardPage() {
                                     v.stock === 0
                                       ? "border-red-200 text-red-500 bg-red-50"
                                       : v.stock <= 3
-                                      ? "border-amber-200 text-amber-700 bg-amber-50"
-                                      : "border-zinc-200 text-zinc-600"
+                                        ? "border-amber-200 text-amber-700 bg-amber-50"
+                                        : "border-zinc-200 text-zinc-600"
                                   }`}
                                 >
                                   {v.size} · {v.stock}
@@ -650,13 +869,17 @@ export default function AdminDashboardPage() {
                               ))}
                             </div>
                           </td>
-                          <td className="py-3 px-4 text-right font-medium text-zinc-900">{p.totalStock}</td>
+                          <td className="py-3 px-4 text-right font-medium text-zinc-900">
+                            {p.totalStock}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                   {filteredProducts.length === 0 && (
-                    <p className="text-center text-xs text-zinc-400 py-10">No products match these filters.</p>
+                    <p className="text-center text-xs text-zinc-400 py-10">
+                      No products match these filters.
+                    </p>
                   )}
                 </div>
               </div>
@@ -664,32 +887,71 @@ export default function AdminDashboardPage() {
 
             {/* ── RECENT ORDERS ── */}
             <div id="orders" className="scroll-mt-28">
-              <p className="text-[10px] tracking-[0.4em] uppercase text-amber-700 font-medium mb-4">Recent Orders</p>
+              <p className="text-[10px] tracking-[0.4em] uppercase text-amber-700 font-medium mb-4">
+                Recent Orders
+              </p>
               <div className="glass rounded-2xl overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-zinc-900/10 text-[10px] uppercase tracking-widest text-zinc-400">
-                        <th className="text-left py-3 px-4 font-medium">Customer</th>
-                        <th className="text-left py-3 px-4 font-medium hidden sm:table-cell">State</th>
-                        <th className="text-left py-3 px-4 font-medium">Items</th>
-                        <th className="text-right py-3 px-4 font-medium">Total</th>
-                        <th className="text-left py-3 px-4 font-medium">Status</th>
-                        <th className="text-right py-3 px-4 font-medium">Action</th>
+                        <th className="text-left py-3 px-4 font-medium">
+                          Customer
+                        </th>
+                        <th className="text-left py-3 px-4 font-medium hidden sm:table-cell">
+                          State
+                        </th>
+                        <th className="text-left py-3 px-4 font-medium">
+                          Items
+                        </th>
+                        <th className="text-right py-3 px-4 font-medium">
+                          Total
+                        </th>
+                        <th className="text-left py-3 px-4 font-medium">
+                          Status
+                        </th>
+                        <th className="text-right py-3 px-4 font-medium">
+                          Action
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
                       {data.orders.recent.map((o) => (
-                        <tr key={o.id} className="border-b border-zinc-900/5 last:border-0 hover:bg-zinc-900/[0.02]">
+                        <tr
+                          key={o.id}
+                          className="border-b border-zinc-900/5 last:border-0 hover:bg-zinc-900/[0.02]"
+                        >
                           <td className="py-3 px-4">
                             <p className="text-zinc-800">{o.customerName}</p>
-                            <p className="text-[10px] text-zinc-400">{o.customerPhone}</p>
+                            <p className="text-[10px] text-zinc-400">
+                              {o.customerPhone}
+                            </p>
                           </td>
-                          <td className="py-3 px-4 text-zinc-500 hidden sm:table-cell">{o.state}</td>
-                          <td className="py-3 px-4 text-zinc-600">{o.itemCount}</td>
-                          <td className="py-3 px-4 text-right font-medium text-zinc-900">{naira(o.total)}</td>
+                          <td className="py-3 px-4 text-zinc-500 hidden sm:table-cell">
+                            {o.state}
+                          </td>
+                          <td className="py-3 px-4 text-zinc-600">
+                            <span>{o.itemCount}</span>
+                            <div className="mt-1 space-y-0.5">
+                              {o.items.map((item, index) => (
+                                <p
+                                  key={`${item.name}-${item.size}-${item.color}-${index}`}
+                                  className="text-[10px] text-zinc-400"
+                                >
+                                  {item.name} · {item.size ?? "One size"}
+                                  {item.color ? ` · ${item.color}` : ""} ×
+                                  {item.quantity}
+                                </p>
+                              ))}
+                            </div>
+                          </td>
+                          <td className="py-3 px-4 text-right font-medium text-zinc-900">
+                            {naira(o.total)}
+                          </td>
                           <td className="py-3 px-4">
-                            <span className={`text-[10px] uppercase tracking-widest px-2 py-1 rounded-full ${STATUS_STYLES[o.status]}`}>
+                            <span
+                              className={`text-[10px] uppercase tracking-widest px-2 py-1 rounded-full ${STATUS_STYLES[o.status]}`}
+                            >
                               {o.status}
                             </span>
                           </td>
@@ -697,7 +959,9 @@ export default function AdminDashboardPage() {
                             <select
                               value={o.status}
                               disabled={updatingOrderId === o.id}
-                              onChange={(e) => updateOrderStatus(o.id, e.target.value)}
+                              onChange={(e) =>
+                                updateOrderStatus(o.id, e.target.value)
+                              }
                               className="glass text-[10px] uppercase tracking-widest text-zinc-600 rounded-lg px-2 py-1.5 outline-none cursor-pointer disabled:opacity-50"
                             >
                               <option value="pending">Pending</option>
@@ -711,7 +975,9 @@ export default function AdminDashboardPage() {
                     </tbody>
                   </table>
                   {data.orders.recent.length === 0 && (
-                    <p className="text-center text-xs text-zinc-400 py-10">No orders yet.</p>
+                    <p className="text-center text-xs text-zinc-400 py-10">
+                      No orders yet.
+                    </p>
                   )}
                 </div>
               </div>
@@ -740,9 +1006,15 @@ function KpiCard({
     <div className={`glass rounded-2xl p-4 ${className}`}>
       <div className="flex items-center gap-2 mb-2">
         <Icon size={13} className={accent} />
-        <p className="text-[10px] uppercase tracking-widest text-zinc-400">{label}</p>
+        <p className="text-[10px] uppercase tracking-widest text-zinc-400">
+          {label}
+        </p>
       </div>
-      <p className={`text-xl font-semibold ${accent === "text-zinc-900" ? "text-zinc-900" : accent}`}>{value}</p>
+      <p
+        className={`text-xl font-semibold ${accent === "text-zinc-900" ? "text-zinc-900" : accent}`}
+      >
+        {value}
+      </p>
     </div>
   );
 }
